@@ -12,6 +12,51 @@
       "name": "SQL-Server",
       "item": [
         {
+          "name": "Diagnostics",
+          "item": [
+            {
+              "name": "Storage-Health - 01",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SQLServerBaseUrl}}/api/v1.0/diagnostics/storage-health",
+                  "host": [
+                    "{{SQLServerBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage-health"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Storage-Health - 02",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SQLServerBaseUrl}}/api/v1.0/diagnostics/storage",
+                  "host": [
+                    "{{SQLServerBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
           "name": "Ingest Extended Log - 01",
           "request": {
             "method": "POST",
@@ -142,6 +187,51 @@
     {
       "name": "SqlLite",
       "item": [
+        {
+          "name": "Diagnostics",
+          "item": [
+            {
+              "name": "Storage-Health - 01",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SqlLiteBaseUrl}}/api/v1.0/diagnostics/storage-health",
+                  "host": [
+                    "{{SqlLiteBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage-health"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Storage-Health - 02",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SqlLiteBaseUrl}}/api/v1.0/diagnostics/storage",
+                  "host": [
+                    "{{SqlLiteBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
         {
           "name": "Ingest Extended Log - 01",
           "request": {
@@ -274,6 +364,51 @@
       "name": "PostgreSQL",
       "item": [
         {
+          "name": "Diagnostics",
+          "item": [
+            {
+              "name": "Storage-Health - 01",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{PostgreSqlBaseUrl}}/api/v1.0/diagnostics/storage-health",
+                  "host": [
+                    "{{PostgreSqlBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage-health"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Storage-Health - 02",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{PostgreSqlBaseUrl}}/api/v1.0/diagnostics/storage",
+                  "host": [
+                    "{{PostgreSqlBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
           "name": "Ingest Extended Log - 01",
           "request": {
             "method": "POST",
@@ -405,6 +540,51 @@
       "name": "FileStorage",
       "item": [
         {
+          "name": "Diagnostics",
+          "item": [
+            {
+              "name": "Storage-Health - 01",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{FileBaseUrl}}/api/v1.0/diagnostics/storage-health",
+                  "host": [
+                    "{{FileBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage-health"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Storage-Health - 02",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{FileBaseUrl}}/api/v1.0/diagnostics/storage",
+                  "host": [
+                    "{{FileBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
           "name": "Ingest Extended Log - 01",
           "request": {
             "method": "POST",
@@ -535,6 +715,51 @@
     {
       "name": "SegmentStorage",
       "item": [
+        {
+          "name": "Diagnostics",
+          "item": [
+            {
+              "name": "Storage-Health - 01",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SegmentBaseUrl}}/api/v1.0/diagnostics/storage-health",
+                  "host": [
+                    "{{SegmentBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage-health"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Storage-Health - 02",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SegmentBaseUrl}}/api/v1.0/diagnostics/storage",
+                  "host": [
+                    "{{SegmentBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "storage"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
         {
           "name": "Ingest Extended Log - 01",
           "request": {
