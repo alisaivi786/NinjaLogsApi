@@ -34,9 +34,17 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
+      - name: Ensure appsettings.Development.json exists
+        run: |
+          if [ ! -f src/NinjaLogs.Api/appsettings.Development.json ]; then
+            cp src/NinjaLogs.Api/appsettings.json src/NinjaLogs.Api/appsettings.Development.json
+          fi
+
       - name: Patch SQL Server connection for integration tests
         run: |
-          perl -0777 -i -pe 's#"SqlServer"\s*:\s*"[^"]*"#"SqlServer": "Server=localhost,1433;User ID=sa;Password=Your_password123;Initial Catalog=NinjaLogs;TrustServerCertificate=True;Encrypt=False;"#g' src/NinjaLogs.Api/appsettings.Development.json
+          jq '.Storage.Connections.SqlServer = "Server=localhost,1433;User ID=sa;Password=Your_password123;Initial Catalog=NinjaLogs;TrustServerCertificate=True;Encrypt=False;"' \
+            src/NinjaLogs.Api/appsettings.Development.json > src/NinjaLogs.Api/appsettings.Development.json.tmp
+          mv src/NinjaLogs.Api/appsettings.Development.json.tmp src/NinjaLogs.Api/appsettings.Development.json
 
       - name: Restore
         run: dotnet restore NinjaLogs.sln --configfile NuGet.Config
