@@ -285,9 +285,11 @@ public sealed class SqliteLogEventRepository(StorageOptions options) : IRelation
             if (connectionString.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             {
                 string rawPath = connectionString[prefix.Length..].Trim();
-                if (!string.IsNullOrWhiteSpace(rawPath) && !Path.IsPathRooted(rawPath))
+                if (!string.IsNullOrWhiteSpace(rawPath))
                 {
-                    string fullPath = Path.GetFullPath(rawPath);
+                    string fullPath = Path.IsPathRooted(rawPath)
+                        ? rawPath
+                        : Path.GetFullPath(rawPath);
                     string? directory = Path.GetDirectoryName(fullPath);
                     if (!string.IsNullOrWhiteSpace(directory))
                     {
