@@ -1,0 +1,14 @@
+**/.DS_Store
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.db
+**/*.ndjson
+**/TestResults/
+data/
+logs/
+src/NinjaLogs.Api/logs/
+src/NinjaLogs.Api/data/

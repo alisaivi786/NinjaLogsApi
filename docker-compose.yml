@@ -1,0 +1,135 @@
+name: ninjalogs
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ninjalogs-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "SDSHJ@AlwaysHandy"
+    ports:
+      - "1433:1433"
+    volumes:
+      - ninjalogs_sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'SDSHJ@AlwaysHandy' -Q 'SELECT 1' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  postgres:
+    image: postgres:16
+    container_name: ninjalogs-postgres
+    environment:
+      POSTGRES_DB: ninjalogs
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ninjalogs_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d ninjalogs" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  api-file:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ninjalogs-api-file
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Storage__Provider: File
+      Storage__LogsDirectory: /var/ninjalogs/logs
+      Storage__Retention__Enabled: "true"
+      Storage__Retention__RetainDays: "30"
+      ApiKeys__IngestionKeys__0: dev-ingestion-key
+    ports:
+      - "8081:8080"
+    volumes:
+      - ninjalogs_file_logs:/var/ninjalogs/logs
+
+  api-sqlite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ninjalogs-api-sqlite
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Storage__Provider: SQLite
+      Storage__Connections__SQLite: Data Source=/var/ninjalogs/sqlite/ninjalogs.db
+      Storage__Retention__Enabled: "true"
+      Storage__Retention__RetainDays: "30"
+      ApiKeys__IngestionKeys__0: dev-ingestion-key
+    ports:
+      - "8082:8080"
+    volumes:
+      - ninjalogs_sqlite_data:/var/ninjalogs/sqlite
+
+  api-segmented:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ninjalogs-api-segmented
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Storage__Provider: SegmentedFile
+      Storage__SegmentedFile__DataDirectory: /var/ninjalogs/data
+      Storage__SegmentedFile__SegmentMaxBytes: "268435456"
+      Storage__Retention__Enabled: "true"
+      Storage__Retention__RetainDays: "30"
+      ApiKeys__IngestionKeys__0: dev-ingestion-key
+    ports:
+      - "8083:8080"
+    volumes:
+      - ninjalogs_segmented_data:/var/ninjalogs/data
+
+  api-sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ninjalogs-api-sqlserver
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Storage__Provider: SqlServer
+      Storage__Connections__SqlServer: Password=SDSHJ@AlwaysHandy;Persist Security Info=True;User ID=sa;Initial Catalog=NinjaLogs;Data Source=sqlserver,1433;Max Pool Size=10000;TrustServerCertificate=True;
+      Storage__Retention__Enabled: "true"
+      Storage__Retention__RetainDays: "30"
+      ApiKeys__IngestionKeys__0: dev-ingestion-key
+    ports:
+      - "8084:8080"
+
+  api-postgresql:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ninjalogs-api-postgresql
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Storage__Provider: PostgreSQL
+      Storage__Connections__PostgreSQL: Host=postgres;Port=5432;Database=ninjalogs;Username=postgres;Password=postgres
+      Storage__Retention__Enabled: "true"
+      Storage__Retention__RetainDays: "30"
+      ApiKeys__IngestionKeys__0: dev-ingestion-key
+    ports:
+      - "8085:8080"
+
+volumes:
+  ninjalogs_sqlserver_data:
+  ninjalogs_postgres_data:
+  ninjalogs_file_logs:
+  ninjalogs_sqlite_data:
+  ninjalogs_segmented_data:

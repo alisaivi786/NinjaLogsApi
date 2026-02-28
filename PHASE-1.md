@@ -130,13 +130,19 @@ Retention/licensing startup enforcement is now active:
 
 ## Test Coverage Added
 - Unit tests:
+  - `FileLogStorageTests`
+  - `SegmentWriterTests`
   - `StoragePolicyEnforcerTests`
   - `SegmentLogMatcherTests`
   - `IngestionApiKeyValidatorTests`
 - Integration tests:
+  - `FileLogStorageIntegrationTests`
+  - `SegmentedFileLogStorageIntegrationTests`
   - `SQLiteLogStorageIntegrationTests`
   - `SqlServerLogStorageIntegrationTests`
 - Integration behavior:
+  - File test writes to API `logs/` folder and validates `.ndjson` persistence/query
+  - SegmentedFile test writes to API `data/` folder and validates segment rotation + manifest
   - SQLite test writes to configured SQLite DB path from API appsettings
   - SQL Server test reads connection from API appsettings and writes real records
 
