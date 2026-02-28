@@ -53,6 +53,92 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "Query-Plan - 03",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SQLServerBaseUrl}}/api/v1.0/diagnostics/query-plan?level=4&serviceName=Perf&statusCode=500",
+                  "host": [
+                    "{{SQLServerBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "query-plan"
+                  ],
+                  "query": [
+                    {
+                      "key": "level",
+                      "value": "4"
+                    },
+                    {
+                      "key": "serviceName",
+                      "value": "Perf"
+                    },
+                    {
+                      "key": "statusCode",
+                      "value": "500"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Files - 04",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SQLServerBaseUrl}}/api/v1.0/diagnostics/dlq/files",
+                  "host": [
+                    "{{SQLServerBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "files"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Replay - 05",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{SQLServerBaseUrl}}/api/v1.0/diagnostics/dlq/replay?file=2026-02-28.ndjson&max=100",
+                  "host": [
+                    "{{SQLServerBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "replay"
+                  ],
+                  "query": [
+                    {
+                      "key": "file",
+                      "value": "2026-02-28.ndjson"
+                    },
+                    {
+                      "key": "max",
+                      "value": "100"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
@@ -99,6 +185,92 @@
                     "v1.0",
                     "diagnostics",
                     "storage"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Query-Plan - 03",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SqlLiteBaseUrl}}/api/v1.0/diagnostics/query-plan?level=4&serviceName=Perf&statusCode=500",
+                  "host": [
+                    "{{SqlLiteBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "query-plan"
+                  ],
+                  "query": [
+                    {
+                      "key": "level",
+                      "value": "4"
+                    },
+                    {
+                      "key": "serviceName",
+                      "value": "Perf"
+                    },
+                    {
+                      "key": "statusCode",
+                      "value": "500"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Files - 04",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SqlLiteBaseUrl}}/api/v1.0/diagnostics/dlq/files",
+                  "host": [
+                    "{{SqlLiteBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "files"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Replay - 05",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{SqlLiteBaseUrl}}/api/v1.0/diagnostics/dlq/replay?file=2026-02-28.ndjson&max=100",
+                  "host": [
+                    "{{SqlLiteBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "replay"
+                  ],
+                  "query": [
+                    {
+                      "key": "file",
+                      "value": "2026-02-28.ndjson"
+                    },
+                    {
+                      "key": "max",
+                      "value": "100"
+                    }
                   ]
                 }
               },
@@ -153,6 +325,92 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "Query-Plan - 03",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{PostgreSqlBaseUrl}}/api/v1.0/diagnostics/query-plan?level=4&serviceName=Perf&statusCode=500",
+                  "host": [
+                    "{{PostgreSqlBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "query-plan"
+                  ],
+                  "query": [
+                    {
+                      "key": "level",
+                      "value": "4"
+                    },
+                    {
+                      "key": "serviceName",
+                      "value": "Perf"
+                    },
+                    {
+                      "key": "statusCode",
+                      "value": "500"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Files - 04",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{PostgreSqlBaseUrl}}/api/v1.0/diagnostics/dlq/files",
+                  "host": [
+                    "{{PostgreSqlBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "files"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Replay - 05",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{PostgreSqlBaseUrl}}/api/v1.0/diagnostics/dlq/replay?file=2026-02-28.ndjson&max=100",
+                  "host": [
+                    "{{PostgreSqlBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "replay"
+                  ],
+                  "query": [
+                    {
+                      "key": "file",
+                      "value": "2026-02-28.ndjson"
+                    },
+                    {
+                      "key": "max",
+                      "value": "100"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
@@ -199,6 +457,92 @@
                     "v1.0",
                     "diagnostics",
                     "storage"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Query-Plan - 03",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{FileBaseUrl}}/api/v1.0/diagnostics/query-plan?level=4&serviceName=Perf&statusCode=500",
+                  "host": [
+                    "{{FileBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "query-plan"
+                  ],
+                  "query": [
+                    {
+                      "key": "level",
+                      "value": "4"
+                    },
+                    {
+                      "key": "serviceName",
+                      "value": "Perf"
+                    },
+                    {
+                      "key": "statusCode",
+                      "value": "500"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Files - 04",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{FileBaseUrl}}/api/v1.0/diagnostics/dlq/files",
+                  "host": [
+                    "{{FileBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "files"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Replay - 05",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{FileBaseUrl}}/api/v1.0/diagnostics/dlq/replay?file=2026-02-28.ndjson&max=100",
+                  "host": [
+                    "{{FileBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "replay"
+                  ],
+                  "query": [
+                    {
+                      "key": "file",
+                      "value": "2026-02-28.ndjson"
+                    },
+                    {
+                      "key": "max",
+                      "value": "100"
+                    }
                   ]
                 }
               },
@@ -253,6 +597,92 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "Query-Plan - 03",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SegmentBaseUrl}}/api/v1.0/diagnostics/query-plan?level=4&serviceName=Perf&statusCode=500",
+                  "host": [
+                    "{{SegmentBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "query-plan"
+                  ],
+                  "query": [
+                    {
+                      "key": "level",
+                      "value": "4"
+                    },
+                    {
+                      "key": "serviceName",
+                      "value": "Perf"
+                    },
+                    {
+                      "key": "statusCode",
+                      "value": "500"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Files - 04",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{SegmentBaseUrl}}/api/v1.0/diagnostics/dlq/files",
+                  "host": [
+                    "{{SegmentBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "files"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "DLQ Replay - 05",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{SegmentBaseUrl}}/api/v1.0/diagnostics/dlq/replay?file=2026-02-28.ndjson&max=100",
+                  "host": [
+                    "{{SegmentBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "diagnostics",
+                    "dlq",
+                    "replay"
+                  ],
+                  "query": [
+                    {
+                      "key": "file",
+                      "value": "2026-02-28.ndjson"
+                    },
+                    {
+                      "key": "max",
+                      "value": "100"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
@@ -267,6 +697,26 @@
     {
       "key": "apiKey",
       "value": "dev-ingestion-key"
+    },
+    {
+      "key": "SQLServerBaseUrl",
+      "value": "http://localhost:8084"
+    },
+    {
+      "key": "SqlLiteBaseUrl",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "PostgreSqlBaseUrl",
+      "value": "http://localhost:8085"
+    },
+    {
+      "key": "FileBaseUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "SegmentBaseUrl",
+      "value": "http://localhost:8083"
     }
   ]
 }
