@@ -78,7 +78,7 @@ jobs:
           echo "API did not become healthy in time"
           exit 1
 
-      - name: Run Combined Phase 4 Benchmarks
+      - name: Run Combined Benchmarks
         run: tests/perf/run-cloudha-throughput-benchmarks.sh
         env:
           PERF_REPORT_DIR: tests/perf/reports
