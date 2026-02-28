@@ -2,6 +2,9 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 COPY NinjaLogs.sln ./
+COPY Directory.Build.props ./
+COPY Directory.Build.targets ./
+COPY Directory.Packages.props ./
 COPY src/NinjaLogs.Api/NinjaLogs.Api.csproj src/NinjaLogs.Api/
 COPY src/NinjaLogs.Shared/NinjaLogs.Shared.csproj src/NinjaLogs.Shared/
 COPY src/NinjaLogs.Infrastructure/NinjaLogs.Infrastructure.csproj src/NinjaLogs.Infrastructure/
