@@ -10,8 +10,8 @@ namespace NinjaLogs.Modules.Logging.Infrastructure.Storage.SQLite.Repositories;
 
 public sealed class SqliteLogEventRepository(StorageOptions options) : IRelationalLogEventRepository
 {
-    private static readonly SemaphoreSlim SchemaLock = new(1, 1);
-    private static volatile bool _schemaReady;
+    private readonly SemaphoreSlim _schemaLock = new(1, 1);
+    private bool _schemaReady;
     private readonly string _connectionString = ResolveConnectionString(options);
 
     public async Task InsertAsync(LogEvent logEvent, CancellationToken cancellationToken = default)
@@ -314,7 +314,7 @@ public sealed class SqliteLogEventRepository(StorageOptions options) : IRelation
             return;
         }
 
-        await SchemaLock.WaitAsync(cancellationToken);
+        await _schemaLock.WaitAsync(cancellationToken);
         try
         {
             if (_schemaReady)
@@ -337,7 +337,7 @@ public sealed class SqliteLogEventRepository(StorageOptions options) : IRelation
         }
         finally
         {
-            SchemaLock.Release();
+            _schemaLock.Release();
         }
     }
 }

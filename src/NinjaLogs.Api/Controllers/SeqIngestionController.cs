@@ -10,10 +10,12 @@ namespace NinjaLogs.Api.Controllers;
 [Route("api/events")]
 public sealed class SeqIngestionController(
     ILogIngestionService ingestionService,
-    IngestionApiKeyValidator apiKeyValidator) : BaseApiController
+    IngestionApiKeyValidator apiKeyValidator,
+    StorageQuotaService quotaService) : BaseApiController
 {
     private readonly ILogIngestionService _ingestionService = ingestionService;
     private readonly IngestionApiKeyValidator _apiKeyValidator = apiKeyValidator;
+    private readonly StorageQuotaService _quotaService = quotaService;
 
     [HttpPost("raw")]
     [Consumes("application/vnd.serilog.clef", "text/plain", "application/json")]
@@ -22,6 +24,17 @@ public sealed class SeqIngestionController(
         if (!_apiKeyValidator.IsValid(Request.Headers["X-Api-Key"].FirstOrDefault()))
         {
             return Unauthorized(new { message = "Invalid or missing ingestion API key." });
+        }
+
+        var quota = await _quotaService.CheckAsync(cancellationToken);
+        if (!quota.Allowed)
+        {
+            return StatusCode(quota.StatusCode, new
+            {
+                message = "Log ingestion quota exceeded. Upgrade license to continue ingesting logs.",
+                currentBytes = quota.CurrentBytes,
+                maxBytes = quota.MaxBytes
+            });
         }
 
         using StreamReader reader = new(Request.Body);

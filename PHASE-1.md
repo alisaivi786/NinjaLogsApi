@@ -36,6 +36,7 @@ Deliver a clean, modular monolith MVP for centralized structured logging, with p
 - `GET /api/logs` (alias)
 - `POST /api/events/raw` (Seq/CLEF-style ingestion)
 - `GET /api/v1.0/diagnostics/storage` (active provider/path diagnostics)
+- `GET /api/v1.0/diagnostics/query-plan` (SQLite/SqlServer query plan introspection)
 
 ## Authentication Implemented for Ingestion
 - API key validation on ingestion endpoints
@@ -56,10 +57,18 @@ Deliver a clean, modular monolith MVP for centralized structured logging, with p
 
 3. `SqlServer` provider: implemented and wired
 - auto schema creation
+- auto database creation if missing (requires DB create permission)
 - indexes for common filters
 - insert + query + paging
 
-4. `PostgreSQL` provider: scaffold only (not implemented yet)
+4. `SegmentedFile` provider: Phase A scaffold implemented
+- segment files (`segment-00001.dat`, ...)
+- manifest (`manifest.json`)
+- append path with segment rotation by max size
+- query skeleton across segments
+- recovery bootstrap from manifest + on-disk file sizes
+
+5. `PostgreSQL` provider: scaffold only (not implemented yet)
 
 ## Structured Logging Fields Supported
 - Core: timestamp, level, message, service, environment, exception
@@ -86,7 +95,50 @@ Deliver a clean, modular monolith MVP for centralized structured logging, with p
 - Launch profiles available:
   - `https-file`
   - `https-sqlite`
+  - `https-segmentedfile`
   - `https-sqlserver`
+
+## Preconfigured Retention and Licensing Settings
+- `Storage:Retention`
+  - `Enabled`
+  - `RetainDays`
+  - `CleanupIntervalMinutes`
+- `Storage:Policy`
+  - `EnforceForDatabaseProviders`
+  - `RequireRetentionEnabledForDatabaseProviders`
+  - `UnlicensedMaxRetentionDays`
+  - `LicensedMaxRetentionDays`
+  - `EnforceLicenseSegmentCap`
+  - `UnlicensedSegmentMaxBytes`
+  - `LicensedSegmentMaxBytes`
+- `Licensing`
+  - `Tier`
+  - `IsLicensed`
+
+Retention/licensing startup enforcement is now active:
+- For `SQLite`/`SqlServer`/`PostgreSQL`, app startup fails if required retention policy is violated.
+- For `SegmentedFile`, startup can enforce license-based segment size caps when enabled.
+- Ingestion quota enforcement is active on `POST /api/v1.0/logs`, `POST /api/logs`, and `POST /api/events/raw`:
+  - free tier can be capped (default `500MB`)
+  - on exceed, ingestion is rejected with configured status code (default `429`)
+
+## Schema Bootstrap and Migration Behavior
+- Startup bootstrapper ensures schema exists for:
+  - `SQLite`: creates `Logs` table + indexes when missing
+  - `SqlServer`: creates database (if missing), then `Logs` table + indexes
+- This prevents runtime failures where DB file/database exists but schema is incomplete.
+
+## Test Coverage Added
+- Unit tests:
+  - `StoragePolicyEnforcerTests`
+  - `SegmentLogMatcherTests`
+  - `IngestionApiKeyValidatorTests`
+- Integration tests:
+  - `SQLiteLogStorageIntegrationTests`
+  - `SqlServerLogStorageIntegrationTests`
+- Integration behavior:
+  - SQLite test writes to configured SQLite DB path from API appsettings
+  - SQL Server test reads connection from API appsettings and writes real records
 
 ## Postman Assets
 - `docs/postman/NinjaLogs-Phase1.postman_collection.json`
@@ -143,4 +195,4 @@ NinjaLogs-BE/
 - OIDC wiring is not implemented in Phase 1 yet
 
 ## Phase 1 Outcome
-Phase 1 foundation is functionally delivered for ingest/query with pluggable storage and working File/SQLite/SqlServer paths, while preserving modular architecture for future expansion.
+Phase 1 foundation is functionally delivered for ingest/query with pluggable storage and working File/SQLite/SqlServer paths, Seq-style raw ingestion, startup schema bootstrapping, license/retention policy enforcement, ingestion quota rejection, and initial enterprise segmented storage scaffolding.

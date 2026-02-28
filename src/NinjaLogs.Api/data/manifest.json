@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "activeSegmentNumber": 1,
+  "segments": [
+    {
+      "segmentNumber": 1,
+      "fileName": "segment-00001.dat",
+      "sizeBytes": 1996,
+      "sealed": false,
+      "createdUtc": "2026-02-28T02:06:38.878479Z",
+      "lastWriteUtc": "2026-02-28T02:06:46.556478Z"
+    }
+  ]
+}

@@ -18,4 +18,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NinjaLogs.Modules.Logging\NinjaLogs.Modules.Logging.csproj" />
+    <ProjectReference Include="..\..\src\NinjaLogs.Api\NinjaLogs.Api.csproj" />
+  </ItemGroup>
+
 </Project>

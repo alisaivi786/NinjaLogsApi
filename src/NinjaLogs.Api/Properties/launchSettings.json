@@ -48,6 +48,16 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "Storage__Provider": "SqlServer"
       }
+    },
+    "https-segmentedfile": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7080;http://localhost:5189",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Storage__Provider": "SegmentedFile"
+      }
     }
   }
 }

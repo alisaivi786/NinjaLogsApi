@@ -283,6 +283,8 @@ public sealed class SqlServerLogEventRepository(StorageOptions options) : IRelat
                 return;
             }
 
+            await EnsureDatabaseExistsAsync(_connectionString, cancellationToken);
+
             await using SqlConnection connection = new(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
@@ -300,5 +302,34 @@ public sealed class SqlServerLogEventRepository(StorageOptions options) : IRelat
         {
             SchemaLock.Release();
         }
+    }
+
+    private static async Task EnsureDatabaseExistsAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        SqlConnectionStringBuilder target = new(connectionString);
+        string databaseName = string.IsNullOrWhiteSpace(target.InitialCatalog) ? "master" : target.InitialCatalog;
+        if (string.Equals(databaseName, "master", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        SqlConnectionStringBuilder master = new(connectionString)
+        {
+            InitialCatalog = "master"
+        };
+
+        await using SqlConnection connection = new(master.ConnectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        await using SqlCommand command = connection.CreateCommand();
+        command.CommandText = """
+            IF DB_ID(@dbName) IS NULL
+            BEGIN
+                DECLARE @sql NVARCHAR(MAX) = N'CREATE DATABASE [' + REPLACE(@dbName, ']', ']]') + N']';
+                EXEC (@sql);
+            END
+            """;
+        command.Parameters.AddWithValue("@dbName", databaseName);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

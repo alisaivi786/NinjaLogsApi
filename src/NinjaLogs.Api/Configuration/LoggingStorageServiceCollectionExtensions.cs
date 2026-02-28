@@ -6,6 +6,7 @@ using NinjaLogs.Modules.Logging.Infrastructure.Storage.PostgreSQL;
 using NinjaLogs.Modules.Logging.Infrastructure.Storage.PostgreSQL.Repositories;
 using NinjaLogs.Modules.Logging.Infrastructure.Storage.SQLite;
 using NinjaLogs.Modules.Logging.Infrastructure.Storage.SQLite.Repositories;
+using NinjaLogs.Modules.Logging.Infrastructure.Storage.SegmentedFile;
 using NinjaLogs.Modules.Logging.Infrastructure.Storage.SqlServer;
 using NinjaLogs.Modules.Logging.Infrastructure.Storage.SqlServer.Repositories;
 
@@ -33,6 +34,9 @@ public static class LoggingStorageServiceCollectionExtensions
                 services.AddScoped<SqliteLogEventRepository>();
                 services.AddScoped<ILogStorage, SqliteLogStorage>();
                 break;
+            case "segmentedfile":
+                services.AddScoped<ILogStorage, SegmentedFileLogStorage>();
+                break;
             case "sqlserver":
                 services.AddScoped<SqlServerLogEventRepository>();
                 services.AddScoped<ILogStorage, SqlServerLogStorage>();
@@ -43,7 +47,7 @@ public static class LoggingStorageServiceCollectionExtensions
                 break;
             default:
                 throw new InvalidOperationException(
-                    $"Unsupported storage provider '{storage.Provider}'. Supported values: File, SQLite, SqlServer, PostgreSQL.");
+                    $"Unsupported storage provider '{storage.Provider}'. Supported values: File, SQLite, SegmentedFile, SqlServer, PostgreSQL.");
         }
 
         return services;

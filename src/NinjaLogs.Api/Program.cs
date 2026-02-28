@@ -1,4 +1,5 @@
 using NinjaLogs.Api.Configuration;
+using NinjaLogs.Modules.Logging.Infrastructure.Options;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,9 +12,24 @@ builder.Services.AddControllers()
     });
 builder.Services.Configure<IngestionApiKeyOptions>(builder.Configuration.GetSection(IngestionApiKeyOptions.SectionName));
 builder.Services.AddSingleton<IngestionApiKeyValidator>();
+builder.Services.Configure<LicensingOptions>(builder.Configuration.GetSection(LicensingOptions.SectionName));
 builder.Services.AddLoggingStorage(builder.Configuration);
 
+StorageOptions storageOptions = builder.Configuration.GetSection(StorageOptions.SectionName).Get<StorageOptions>() ?? new();
+LicensingOptions licensingOptions = builder.Configuration.GetSection(LicensingOptions.SectionName).Get<LicensingOptions>() ?? new();
+StoragePolicyEnforcer.ValidateOrThrow(storageOptions, licensingOptions);
+builder.Services.AddSingleton(storageOptions);
+builder.Services.AddSingleton(licensingOptions);
+builder.Services.AddScoped<StorageQuotaService>();
+builder.Services.AddScoped<StorageSchemaBootstrapper>();
+
 var app = builder.Build();
+
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    StorageSchemaBootstrapper bootstrapper = scope.ServiceProvider.GetRequiredService<StorageSchemaBootstrapper>();
+    await bootstrapper.EnsureInitializedAsync();
+}
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();

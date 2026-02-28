@@ -12,11 +12,13 @@ namespace NinjaLogs.Api.Controllers;
 public sealed class LogsController(
     ILogIngestionService ingestionService,
     ILogQueryService queryService,
-    IngestionApiKeyValidator apiKeyValidator) : BaseApiController
+    IngestionApiKeyValidator apiKeyValidator,
+    StorageQuotaService quotaService) : BaseApiController
 {
     private readonly ILogIngestionService _ingestionService = ingestionService;
     private readonly ILogQueryService _queryService = queryService;
     private readonly IngestionApiKeyValidator _apiKeyValidator = apiKeyValidator;
+    private readonly StorageQuotaService _quotaService = quotaService;
 
     [HttpPost]
     public async Task<IActionResult> PostAsync([FromBody] CreateLogRequest request, CancellationToken cancellationToken)
@@ -24,6 +26,17 @@ public sealed class LogsController(
         if (!_apiKeyValidator.IsValid(Request.Headers["X-Api-Key"].FirstOrDefault()))
         {
             return Unauthorized(new { message = "Invalid or missing ingestion API key." });
+        }
+
+        var quota = await _quotaService.CheckAsync(cancellationToken);
+        if (!quota.Allowed)
+        {
+            return StatusCode(quota.StatusCode, new
+            {
+                message = "Log ingestion quota exceeded. Upgrade license to continue ingesting logs.",
+                currentBytes = quota.CurrentBytes,
+                maxBytes = quota.MaxBytes
+            });
         }
 
         LogEvent logEvent = new(
