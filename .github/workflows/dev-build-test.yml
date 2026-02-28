@@ -1,0 +1,89 @@
+name: Dev Build & Test
+
+on:
+  push:
+    branches: [ "main", "develop", "feature/**" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Your_password123"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Your_password123 -Q 'SELECT 1' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Patch SQL Server connection for integration tests
+        run: |
+          perl -0777 -i -pe 's#"SqlServer"\s*:\s*"[^"]*"#"SqlServer": "Server=localhost,1433;User ID=sa;Password=Your_password123;Initial Catalog=NinjaLogs;TrustServerCertificate=True;Encrypt=False;"#g' src/NinjaLogs.Api/appsettings.Development.json
+
+      - name: Restore
+        run: dotnet restore NinjaLogs.sln --configfile NuGet.Config
+
+      - name: Build
+        run: dotnet build NinjaLogs.sln --configuration Release --no-restore
+
+      - name: Run Unit Tests
+        run: |
+          dotnet test tests/NinjaLogs.UnitTests/NinjaLogs.UnitTests.csproj \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=unit-tests.trx" \
+            --results-directory ./TestResults/Unit \
+            --collect "XPlat Code Coverage"
+
+      - name: Run Integration Tests
+        run: |
+          dotnet test tests/NinjaLogs.IntegrationTests/NinjaLogs.IntegrationTests.csproj \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=integration-tests.trx" \
+            --results-directory ./TestResults/Integration \
+            --collect "XPlat Code Coverage"
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ninjalogs-test-results
+          path: |
+            TestResults/**/*.trx
+            TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Job Summary
+        if: always()
+        run: |
+          {
+            echo "## NinjaLogs Dev Build & Test"
+            echo ""
+            echo "- Build: completed"
+            echo "- Unit tests: executed"
+            echo "- Integration tests: executed"
+            echo "- Reports artifact: \`ninjalogs-test-results\`"
+            echo ""
+            echo "### Report files"
+            find TestResults -type f | sed 's/^/- /'
+          } >> "$GITHUB_STEP_SUMMARY"
