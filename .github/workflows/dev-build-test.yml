@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ "main", "develop" ]
   workflow_dispatch:
+    inputs:
+      run_perf_smoke:
+        description: "Run k6 perf smoke job"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build-and-test:
@@ -21,6 +27,19 @@ jobs:
           - 1433:1433
         options: >-
           --health-cmd="/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Your_password123 -Q 'SELECT 1' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: "ninjalogs"
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "postgres"
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d ninjalogs"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=20
@@ -46,17 +65,24 @@ jobs:
             src/NinjaLogs.Api/appsettings.Development.json > src/NinjaLogs.Api/appsettings.Development.json.tmp
           mv src/NinjaLogs.Api/appsettings.Development.json.tmp src/NinjaLogs.Api/appsettings.Development.json
 
+      - name: Patch PostgreSQL connection for integration tests
+        run: |
+          jq '.Storage.Connections.PostgreSQL = "Host=localhost;Port=5432;Database=ninjalogs;Username=postgres;Password=postgres"' \
+            src/NinjaLogs.Api/appsettings.Development.json > src/NinjaLogs.Api/appsettings.Development.json.tmp
+          mv src/NinjaLogs.Api/appsettings.Development.json.tmp src/NinjaLogs.Api/appsettings.Development.json
+
       - name: Restore
         run: dotnet restore NinjaLogs.sln --configfile NuGet.Config
 
       - name: Build
-        run: dotnet build NinjaLogs.sln --configuration Release --no-restore
+        run: dotnet build NinjaLogs.sln --configuration Release --no-restore -warnaserror /p:ContinuousIntegrationBuild=true
 
       - name: Run Unit Tests
         run: |
           dotnet test tests/NinjaLogs.UnitTests/NinjaLogs.UnitTests.csproj \
             --configuration Release \
             --no-build \
+            -warnaserror \
             --logger "trx;LogFileName=unit-tests.trx" \
             --results-directory ./TestResults/Unit \
             --collect "XPlat Code Coverage"
@@ -66,6 +92,7 @@ jobs:
           dotnet test tests/NinjaLogs.IntegrationTests/NinjaLogs.IntegrationTests.csproj \
             --configuration Release \
             --no-build \
+            -warnaserror \
             --logger "trx;LogFileName=integration-tests.trx" \
             --results-directory ./TestResults/Integration \
             --collect "XPlat Code Coverage"
@@ -95,3 +122,50 @@ jobs:
             echo "### Report files"
             find TestResults -type f | sed 's/^/- /'
           } >> "$GITHUB_STEP_SUMMARY"
+
+  perf-smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_perf_smoke == true
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Build and run sqlite api
+        run: |
+          docker compose up --build -d api-sqlite
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8082/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "api-sqlite did not become healthy in time"
+          docker compose logs api-sqlite
+          exit 1
+
+      - name: Run perf smoke (k6)
+        run: |
+          k6 run tests/perf/ingestion-smoke.js -e BASE_URL=http://localhost:8082 -e API_KEY=dev-ingestion-key
+
+      - name: Collect docker logs
+        if: always()
+        run: |
+          mkdir -p TestResults/Perf
+          docker compose logs api-sqlite > TestResults/Perf/api-sqlite.log || true
+
+      - name: Upload perf artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ninjalogs-perf-smoke
+          path: TestResults/Perf/**
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Cleanup compose
+        if: always()
+        run: docker compose down -v

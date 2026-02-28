@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Npgsql;
 using NinjaLogs.Modules.Logging.Infrastructure.Options;
 
 namespace NinjaLogs.Api.Configuration;
@@ -34,6 +35,7 @@ public sealed class StorageQuotaService(StorageOptions storage, LicensingOptions
             "segmentedfile" => Task.FromResult(GetDirectorySizeBytes(Path.GetFullPath(_storage.SegmentedFile.DataDirectory), "*")),
             "sqlite" => Task.FromResult(GetSqliteDbFileSizeBytes()),
             "sqlserver" => GetSqlServerTableBytesAsync(cancellationToken),
+            "postgresql" => GetPostgresTableBytesAsync(cancellationToken),
             _ => Task.FromResult(0L)
         };
     }
@@ -120,6 +122,25 @@ public sealed class StorageQuotaService(StorageOptions storage, LicensingOptions
         return Directory.EnumerateFiles(directory, pattern, SearchOption.TopDirectoryOnly)
             .Select(path => new FileInfo(path).Length)
             .Sum();
+    }
+
+    private async Task<long> GetPostgresTableBytesAsync(CancellationToken cancellationToken)
+    {
+        string? connectionString = !string.IsNullOrWhiteSpace(_storage.ConnectionString)
+            ? _storage.ConnectionString
+            : _storage.Connections.PostgreSQL;
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return 0;
+        }
+
+        await using NpgsqlConnection connection = new(connectionString.Trim());
+        await connection.OpenAsync(cancellationToken);
+        await using NpgsqlCommand command = connection.CreateCommand();
+        command.CommandText = "SELECT COALESCE(pg_total_relation_size('logs'), 0);";
+        object? result = await command.ExecuteScalarAsync(cancellationToken);
+        return result is DBNull or null ? 0 : Convert.ToInt64(result);
     }
 }
 

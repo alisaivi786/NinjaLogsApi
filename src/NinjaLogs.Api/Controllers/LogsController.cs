@@ -13,21 +13,50 @@ public sealed class LogsController(
     ILogIngestionService ingestionService,
     ILogQueryService queryService,
     IngestionApiKeyValidator apiKeyValidator,
-    StorageQuotaService quotaService) : BaseApiController
+    StorageQuotaService quotaService,
+    StorageRuntimeMetrics metrics,
+    IngestionProtectionService protectionService,
+    IngestionQuotaCoordinator quotaCoordinator,
+    LogDataSanitizer sanitizer) : BaseApiController
 {
     private readonly ILogIngestionService _ingestionService = ingestionService;
     private readonly ILogQueryService _queryService = queryService;
     private readonly IngestionApiKeyValidator _apiKeyValidator = apiKeyValidator;
     private readonly StorageQuotaService _quotaService = quotaService;
+    private readonly StorageRuntimeMetrics _metrics = metrics;
+    private readonly IngestionProtectionService _protectionService = protectionService;
+    private readonly IngestionQuotaCoordinator _quotaCoordinator = quotaCoordinator;
+    private readonly LogDataSanitizer _sanitizer = sanitizer;
 
     [HttpPost]
     public async Task<IActionResult> PostAsync([FromBody] CreateLogRequest request, CancellationToken cancellationToken)
     {
-        if (!_apiKeyValidator.IsValid(Request.Headers["X-Api-Key"].FirstOrDefault()))
+        string? apiKey = Request.Headers["X-Api-Key"].FirstOrDefault();
+        if (!_apiKeyValidator.IsValid(apiKey))
         {
             return Unauthorized(new { message = "Invalid or missing ingestion API key." });
         }
 
+        if (!_protectionService.IsPayloadAllowed(Request.ContentLength, out long maxPayloadBytes))
+        {
+            return StatusCode(StatusCodes.Status413PayloadTooLarge, new
+            {
+                message = "Payload too large.",
+                maxPayloadBytes
+            });
+        }
+
+        if (!_protectionService.TryConsume(apiKey!, out int retryAfterSeconds))
+        {
+            Response.Headers.RetryAfter = retryAfterSeconds.ToString();
+            return StatusCode(StatusCodes.Status429TooManyRequests, new
+            {
+                message = "Rate limit exceeded for API key.",
+                retryAfterSeconds
+            });
+        }
+
+        using IDisposable gate = await _quotaCoordinator.EnterAsync(cancellationToken);
         var quota = await _quotaService.CheckAsync(cancellationToken);
         if (!quota.Allowed)
         {
@@ -69,12 +98,14 @@ public sealed class LogsController(
             request.RequestBody,
             request.ResponseBody);
 
+        logEvent = _sanitizer.Sanitize(logEvent);
         await _ingestionService.IngestAsync(logEvent, cancellationToken);
+        _metrics.MarkQueued();
         return Accepted();
     }
 
     [HttpGet]
-    public Task<PagedResult<LogEvent>> GetAsync(
+    public async Task<PagedResult<LogEvent>> GetAsync(
         [FromQuery] DateTime? fromUtc,
         [FromQuery] DateTime? toUtc,
         [FromQuery] LogEventLevel? level,
@@ -91,7 +122,10 @@ public sealed class LogsController(
         CancellationToken cancellationToken = default)
     {
         LogQuery query = new(fromUtc, toUtc, level, serviceName, environment, traceId, correlationId, requestId, requestMethod, statusCode, searchText, page, pageSize);
-        return _queryService.QueryAsync(query, cancellationToken);
+        DateTime started = DateTime.UtcNow;
+        PagedResult<LogEvent> result = await _queryService.QueryAsync(query, cancellationToken);
+        _metrics.MarkQuery(DateTime.UtcNow - started);
+        return result;
     }
 }
 

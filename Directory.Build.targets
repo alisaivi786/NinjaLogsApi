@@ -1,0 +1,11 @@
+<Project>
+  <Target Name="FailOnNewtonsoftJsonPackage" BeforeTargets="ResolveReferences">
+    <ItemGroup>
+      <_NewtonsoftPackage Include="@(PackageReference)"
+                          Condition="'%(PackageReference.Identity)' == 'Newtonsoft.Json'" />
+    </ItemGroup>
+
+    <Error Condition="'@(_NewtonsoftPackage)' != ''"
+           Text="Newtonsoft.Json is not allowed in NinjaLogs. Use System.Text.Json only." />
+  </Target>
+</Project>

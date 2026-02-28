@@ -14,6 +14,8 @@ public sealed class StorageOptions
     public SegmentedFileStorageOptions SegmentedFile { get; set; } = new();
     public StorageRetentionOptions Retention { get; set; } = new();
     public StoragePolicyOptions Policy { get; set; } = new();
+    public IngestionPipelineOptions IngestionPipeline { get; set; } = new();
+    public DeploymentOptions Deployment { get; set; } = new();
 
     public string GetNormalizedProvider() => Provider.Trim().ToLowerInvariant();
 }
@@ -52,4 +54,21 @@ public sealed class StoragePolicyOptions
     public bool EnforceLicenseSegmentCap { get; set; } = false;
     public long UnlicensedSegmentMaxBytes { get; set; } = 256L * 1024 * 1024;
     public long LicensedSegmentMaxBytes { get; set; } = 1024L * 1024 * 1024;
+}
+
+public sealed class IngestionPipelineOptions
+{
+    public int QueueCapacity { get; set; } = 20_000;
+    public int BatchSize { get; set; } = 200;
+    public int MaxWriteRetries { get; set; } = 3;
+    public int RetryDelayMs { get; set; } = 200;
+    public string DeadLetterDirectory { get; set; } = "deadletter";
+    public long MaxPayloadBytes { get; set; } = 1024L * 1024;
+    public int MaxRequestsPerMinutePerApiKey { get; set; } = 600;
+}
+
+public sealed class DeploymentOptions
+{
+    public string Profile { get; set; } = "SingleNode";
+    public string NodeMode { get; set; } = "SingleWriter";
 }

@@ -6,7 +6,7 @@ services:
     container_name: ninjalogs-sqlserver
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "SDSHJ@AlwaysHandy"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-Your_password123}"
     expose:
       - "1433"
     volumes:
@@ -23,7 +23,7 @@ services:
     environment:
       POSTGRES_DB: ninjalogs
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
     ports:
       - "5432:5432"
     volumes:
@@ -115,7 +115,7 @@ services:
       ASPNETCORE_Kestrel__Certificates__Default__Path: /https/ninjalogs-dev.pfx
       ASPNETCORE_Kestrel__Certificates__Default__Password: NinjaLogsDev123!
       Storage__Provider: SqlServer
-      Storage__Connections__SqlServer: Password=SDSHJ@AlwaysHandy;Persist Security Info=True;User ID=sa;Initial Catalog=NinjaLogs;Data Source=sqlserver,1433;Max Pool Size=10000;TrustServerCertificate=True;
+      Storage__Connections__SqlServer: Password=${MSSQL_SA_PASSWORD:-Your_password123};Persist Security Info=True;User ID=sa;Initial Catalog=NinjaLogs;Data Source=sqlserver,1433;Max Pool Size=10000;TrustServerCertificate=True;
       Storage__Retention__Enabled: "true"
       Storage__Retention__RetainDays: "30"
       ApiKeys__IngestionKeys__0: dev-ingestion-key
@@ -139,7 +139,7 @@ services:
       ASPNETCORE_Kestrel__Certificates__Default__Path: /https/ninjalogs-dev.pfx
       ASPNETCORE_Kestrel__Certificates__Default__Password: NinjaLogsDev123!
       Storage__Provider: PostgreSQL
-      Storage__Connections__PostgreSQL: Host=postgres;Port=5432;Database=ninjalogs;Username=postgres;Password=postgres
+      Storage__Connections__PostgreSQL: Host=postgres;Port=5432;Database=ninjalogs;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}
       Storage__Retention__Enabled: "true"
       Storage__Retention__RetainDays: "30"
       ApiKeys__IngestionKeys__0: dev-ingestion-key

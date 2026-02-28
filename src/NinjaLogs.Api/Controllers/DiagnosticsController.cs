@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
+using NinjaLogs.Api.Configuration;
+using NinjaLogs.Modules.Logging.Application.Interfaces;
 using NinjaLogs.Modules.Logging.Infrastructure.Options;
 using System.Data;
 using System.Text;
@@ -9,21 +11,185 @@ namespace NinjaLogs.Api.Controllers;
 
 [Route("api/v1.0/diagnostics")]
 [Route("api/diagnostics")]
-public sealed class DiagnosticsController(StorageOptions storageOptions) : BaseApiController
+public sealed class DiagnosticsController(
+    StorageOptions storageOptions,
+    StorageQuotaService quotaService,
+    StorageRuntimeMetrics runtimeMetrics,
+    ILogIngestionQueue queue,
+    IEnumerable<ILogIndexStrategy> indexStrategies,
+    IWebHostEnvironment environment,
+    DeadLetterReplayService deadLetterReplayService) : BaseApiController
 {
     private readonly StorageOptions _storageOptions = storageOptions;
+    private readonly StorageQuotaService _quotaService = quotaService;
+    private readonly StorageRuntimeMetrics _runtimeMetrics = runtimeMetrics;
+    private readonly ILogIngestionQueue _queue = queue;
+    private readonly IEnumerable<ILogIndexStrategy> _indexStrategies = indexStrategies;
+    private readonly IWebHostEnvironment _environment = environment;
+    private readonly DeadLetterReplayService _deadLetterReplayService = deadLetterReplayService;
 
     [HttpGet("storage")]
-    public IActionResult GetStorage()
+    public async Task<IActionResult> GetStorage(CancellationToken cancellationToken)
     {
+        var quota = await _quotaService.CheckAsync(cancellationToken);
+        RuntimeMetricsSnapshot metrics = _runtimeMetrics.Snapshot();
+        ILogIndexStrategy? activeIndex = _indexStrategies.FirstOrDefault(x =>
+            string.Equals(x.Provider, _storageOptions.GetNormalizedProvider(), StringComparison.OrdinalIgnoreCase));
+
         return Ok(new
         {
             provider = _storageOptions.Provider,
-            connectionString = _storageOptions.ConnectionString,
+            connectionString = MaskConnectionString(_storageOptions.ConnectionString),
+            providerConnections = new
+            {
+                sqlite = MaskConnectionString(_storageOptions.Connections.SQLite),
+                sqlServer = MaskConnectionString(_storageOptions.Connections.SqlServer),
+                postgreSql = MaskConnectionString(_storageOptions.Connections.PostgreSQL)
+            },
             logsDirectory = _storageOptions.LogsDirectory,
-            currentDirectory = Directory.GetCurrentDirectory(),
-            baseDirectory = AppContext.BaseDirectory
+            currentDirectory = _environment.IsDevelopment() ? Directory.GetCurrentDirectory() : "(hidden)",
+            baseDirectory = _environment.IsDevelopment() ? AppContext.BaseDirectory : "(hidden)",
+            queue = new
+            {
+                depth = _queue.Count
+            },
+            quota = new
+            {
+                allowed = quota.Allowed,
+                currentBytes = quota.CurrentBytes,
+                maxBytes = quota.MaxBytes
+            },
+            metrics = new
+            {
+                queued = metrics.QueuedCount,
+                written = metrics.WrittenCount,
+                writeFailures = metrics.FailedWriteCount,
+                queries = metrics.QueryCount,
+                avgWriteLatencyMs = metrics.AvgWriteLatencyMs,
+                avgQueryLatencyMs = metrics.AvgQueryLatencyMs
+            },
+            indexStrategy = activeIndex is null
+                ? null
+                : new
+                {
+                    provider = activeIndex.Provider,
+                    descriptors = activeIndex.Descriptors
+                }
         });
+    }
+
+    [HttpGet("storage-health")]
+    public async Task<IActionResult> GetStorageHealth(CancellationToken cancellationToken)
+    {
+        string provider = _storageOptions.GetNormalizedProvider();
+        var quota = await _quotaService.CheckAsync(cancellationToken);
+        RuntimeMetricsSnapshot metrics = _runtimeMetrics.Snapshot();
+
+        object details = provider switch
+        {
+            "file" => new
+            {
+                logsDirectory = Path.GetFullPath(_storageOptions.LogsDirectory),
+                ndjsonFileCount = Directory.Exists(_storageOptions.LogsDirectory)
+                    ? Directory.EnumerateFiles(_storageOptions.LogsDirectory, "*.ndjson", SearchOption.TopDirectoryOnly).Count()
+                    : 0
+            },
+            "segmentedfile" => new
+            {
+                dataDirectory = Path.GetFullPath(_storageOptions.SegmentedFile.DataDirectory),
+                segmentFileCount = Directory.Exists(_storageOptions.SegmentedFile.DataDirectory)
+                    ? Directory.EnumerateFiles(_storageOptions.SegmentedFile.DataDirectory, "segment-*.dat", SearchOption.TopDirectoryOnly).Count()
+                    : 0,
+                manifestExists = System.IO.File.Exists(Path.Combine(_storageOptions.SegmentedFile.DataDirectory, _storageOptions.SegmentedFile.ManifestFileName))
+            },
+            "sqlite" => new
+            {
+                sqliteConnection = MaskConnectionString(_storageOptions.Connections.SQLite),
+                dbFileBytes = quota.CurrentBytes
+            },
+            "sqlserver" => new
+            {
+                sqlServerConnection = MaskConnectionString(_storageOptions.Connections.SqlServer),
+                approximateTableBytes = quota.CurrentBytes
+            },
+            "postgresql" => new
+            {
+                postgresConnection = MaskConnectionString(_storageOptions.Connections.PostgreSQL),
+                approximateTableBytes = quota.CurrentBytes
+            },
+            _ => new { }
+        };
+
+        return Ok(new
+        {
+            provider = _storageOptions.Provider,
+            queueDepth = _queue.Count,
+            quota = new
+            {
+                allowed = quota.Allowed,
+                currentBytes = quota.CurrentBytes,
+                maxBytes = quota.MaxBytes
+            },
+            runtime = new
+            {
+                metrics.WrittenCount,
+                metrics.FailedWriteCount,
+                metrics.QueryCount,
+                metrics.AvgWriteLatencyMs,
+                metrics.AvgQueryLatencyMs
+            },
+            details
+        });
+    }
+
+    [HttpGet("dlq/files")]
+    public IActionResult GetDeadLetterFiles()
+    {
+        return Ok(new
+        {
+            files = _deadLetterReplayService.ListFiles()
+        });
+    }
+
+    [HttpPost("dlq/replay")]
+    public async Task<IActionResult> ReplayDeadLetter([FromQuery] string file, [FromQuery] int max = 1000, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(file))
+        {
+            return BadRequest(new { message = "file is required." });
+        }
+
+        int replayed = await _deadLetterReplayService.ReplayAsync(file, max, cancellationToken);
+        return Ok(new { replayed, file, max });
+    }
+
+    private static string? MaskConnectionString(string? connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return connectionString;
+        }
+
+        string[] parts = connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        for (int i = 0; i < parts.Length; i++)
+        {
+            int idx = parts[i].IndexOf('=');
+            if (idx <= 0)
+            {
+                continue;
+            }
+
+            string key = parts[i][..idx].Trim();
+            if (key.Equals("Password", StringComparison.OrdinalIgnoreCase) ||
+                key.Equals("Pwd", StringComparison.OrdinalIgnoreCase) ||
+                key.Equals("User ID", StringComparison.OrdinalIgnoreCase) ||
+                key.Equals("Username", StringComparison.OrdinalIgnoreCase))
+            {
+                parts[i] = $"{key}=***";
+            }
+        }
+
+        return string.Join(';', parts) + ";";
     }
 
     [HttpGet("query-plan")]
