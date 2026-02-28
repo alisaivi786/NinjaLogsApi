@@ -43,7 +43,7 @@ public sealed class DlqReplayEndpointLikeIntegrationTests
             int remaining = File.ReadLines(filePath).Count(l => !string.IsNullOrWhiteSpace(l));
             Assert.Equal(1, remaining);
 
-            LogEvent queued = await queue.DequeueAsync();
+            LogEvent queued = (await queue.DequeueAsync()).Event;
             Assert.Equal("x1", queued.Message);
         }
         finally

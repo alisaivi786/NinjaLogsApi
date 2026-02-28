@@ -23,19 +23,29 @@ public sealed class QueuedLogWriterBackgroundService(
     {
         IngestionPipelineOptions pipeline = _storageOptions.IngestionPipeline ?? new();
         int batchSize = Math.Max(1, pipeline.BatchSize);
+        int workers = Math.Clamp(pipeline.WriterWorkers, 1, 2);
         int maxRetries = Math.Max(1, pipeline.MaxWriteRetries);
         int retryDelayMs = Math.Max(10, pipeline.RetryDelayMs);
 
         string deadLetterRoot = Path.GetFullPath(Path.Combine(_storageOptions.LogsDirectory, pipeline.DeadLetterDirectory));
         Directory.CreateDirectory(deadLetterRoot);
 
+        Task[] tasks = Enumerable.Range(0, workers)
+            .Select(_ => RunWriterWorkerAsync(batchSize, maxRetries, retryDelayMs, deadLetterRoot, stoppingToken))
+            .ToArray();
+
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task RunWriterWorkerAsync(int batchSize, int maxRetries, int retryDelayMs, string deadLetterRoot, CancellationToken stoppingToken)
+    {
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                LogEvent first = await _queue.DequeueAsync(stoppingToken);
-                List<LogEvent> batch = [first];
-                while (batch.Count < batchSize && _queue.TryDequeue(out LogEvent? next) && next is not null)
+                IngestionQueueItem first = await _queue.DequeueAsync(stoppingToken);
+                List<IngestionQueueItem> batch = [first];
+                while (batch.Count < batchSize && _queue.TryDequeue(out IngestionQueueItem? next) && next is not null)
                 {
                     batch.Add(next);
                 }
@@ -43,41 +53,55 @@ public sealed class QueuedLogWriterBackgroundService(
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 ILogStorage storage = scope.ServiceProvider.GetRequiredService<ILogStorage>();
 
-                foreach (LogEvent logEvent in batch)
+                bool batchSucceeded = false;
+                Exception? lastException = null;
+                DateTime dbStarted = DateTime.UtcNow;
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
                 {
-                    bool succeeded = false;
-                    DateTime started = DateTime.UtcNow;
-                    Exception? lastException = null;
-
-                    for (int attempt = 1; attempt <= maxRetries; attempt++)
+                    try
                     {
-                        try
+                        if (storage is IBulkLogStorage bulk && batch.Count > 1)
                         {
-                            await storage.AppendAsync(logEvent, stoppingToken);
-                            succeeded = true;
-                            break;
+                            await bulk.AppendBatchAsync(batch.Select(x => x.Event).ToList(), stoppingToken);
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            lastException = ex;
-                            if (attempt < maxRetries)
+                            foreach (IngestionQueueItem item in batch)
                             {
-                                await Task.Delay(retryDelayMs, stoppingToken);
+                                await storage.AppendAsync(item.Event, stoppingToken);
                             }
                         }
-                    }
 
-                    if (succeeded)
+                        batchSucceeded = true;
+                        break;
+                    }
+                    catch (Exception ex)
                     {
-                        _metrics.MarkWrite(DateTime.UtcNow - started, success: true);
-                        await _queue.AcknowledgeAsync(stoppingToken);
-                        continue;
+                        lastException = ex;
+                        if (attempt < maxRetries)
+                        {
+                            await Task.Delay(retryDelayMs, stoppingToken);
+                        }
                     }
+                }
 
-                    _metrics.MarkWrite(TimeSpan.Zero, success: false);
-                    _logger.LogError(lastException, "Failed to persist queued log event after retries.");
-                    await WriteDeadLetterAsync(deadLetterRoot, logEvent, stoppingToken);
-                    await _queue.AcknowledgeAsync(stoppingToken);
+                TimeSpan dbElapsed = DateTime.UtcNow - dbStarted;
+                if (batchSucceeded)
+                {
+                    foreach (IngestionQueueItem item in batch)
+                    {
+                        _metrics.MarkWrite(item.EnqueuedUtc, dbElapsed, success: true);
+                        await _queue.AcknowledgeAsync(item.Sequence, stoppingToken);
+                    }
+                    continue;
+                }
+
+                _metrics.MarkWrite(DateTime.UtcNow, TimeSpan.Zero, success: false);
+                _logger.LogError(lastException, "Failed to persist queued log batch after retries.");
+                foreach (IngestionQueueItem item in batch)
+                {
+                    await WriteDeadLetterAsync(deadLetterRoot, item.Event, stoppingToken);
+                    await _queue.AcknowledgeAsync(item.Sequence, stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

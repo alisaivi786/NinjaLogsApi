@@ -6,10 +6,11 @@ namespace NinjaLogs.Modules.Logging.Application.Services;
 
 public sealed class BoundedLogIngestionQueue(int capacity = 20_000) : ILogIngestionQueue
 {
-    private readonly Channel<LogEvent> _channel = Channel.CreateBounded<LogEvent>(new BoundedChannelOptions(capacity)
+    private long _nextSequence;
+    private readonly Channel<IngestionQueueItem> _channel = Channel.CreateBounded<IngestionQueueItem>(new BoundedChannelOptions(capacity)
     {
         FullMode = BoundedChannelFullMode.Wait,
-        SingleReader = true,
+        SingleReader = false,
         SingleWriter = false
     });
 
@@ -17,20 +18,24 @@ public sealed class BoundedLogIngestionQueue(int capacity = 20_000) : ILogIngest
 
     public ValueTask EnqueueAsync(LogEvent logEvent, CancellationToken cancellationToken = default)
     {
-        return _channel.Writer.WriteAsync(logEvent, cancellationToken);
+        IngestionQueueItem item = new(
+            Interlocked.Increment(ref _nextSequence),
+            DateTime.UtcNow,
+            logEvent);
+        return _channel.Writer.WriteAsync(item, cancellationToken);
     }
 
-    public ValueTask<LogEvent> DequeueAsync(CancellationToken cancellationToken = default)
+    public ValueTask<IngestionQueueItem> DequeueAsync(CancellationToken cancellationToken = default)
     {
         return _channel.Reader.ReadAsync(cancellationToken);
     }
 
-    public bool TryDequeue(out LogEvent? logEvent)
+    public bool TryDequeue(out IngestionQueueItem? item)
     {
-        return _channel.Reader.TryRead(out logEvent);
+        return _channel.Reader.TryRead(out item);
     }
 
-    public ValueTask AcknowledgeAsync(CancellationToken cancellationToken = default)
+    public ValueTask AcknowledgeAsync(long sequence, CancellationToken cancellationToken = default)
     {
         return ValueTask.CompletedTask;
     }

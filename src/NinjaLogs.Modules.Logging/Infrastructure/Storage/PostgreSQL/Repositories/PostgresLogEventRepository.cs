@@ -66,6 +66,36 @@ public sealed class PostgresLogEventRepository(StorageOptions options) : IRelati
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task InsertBatchAsync(IReadOnlyList<LogEvent> logs, CancellationToken cancellationToken = default)
+    {
+        if (logs.Count == 0)
+        {
+            return;
+        }
+
+        if (logs.Count == 1)
+        {
+            await InsertAsync(logs[0], cancellationToken);
+            return;
+        }
+
+        await EnsureSchemaAsync(cancellationToken);
+        await using NpgsqlConnection connection = new(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using NpgsqlTransaction tx = await connection.BeginTransactionAsync(cancellationToken);
+        await using NpgsqlCommand command = connection.CreateCommand();
+        command.Transaction = tx;
+        command.CommandText = BuildBatchInsertSql(logs.Count);
+
+        for (int i = 0; i < logs.Count; i++)
+        {
+            AddBatch(command, i, logs[i]);
+        }
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
+    }
+
     public async Task<PagedResult<LogEvent>> SearchAsync(LogQuery query, CancellationToken cancellationToken = default)
     {
         await EnsureSchemaAsync(cancellationToken);
@@ -226,6 +256,63 @@ public sealed class PostgresLogEventRepository(StorageOptions options) : IRelati
     private static void Add(NpgsqlCommand command, string name, object? value)
     {
         command.Parameters.AddWithValue(name, value ?? DBNull.Value);
+    }
+
+    private static void AddBatch(NpgsqlCommand command, int index, LogEvent logEvent)
+    {
+        string p = $"_{index}";
+        Add(command, $"@timestamp_utc{p}", logEvent.TimestampUtc.ToUniversalTime());
+        Add(command, $"@level{p}", (int)logEvent.Level);
+        Add(command, $"@service_name{p}", logEvent.ServiceName);
+        Add(command, $"@environment{p}", logEvent.Environment);
+        Add(command, $"@message{p}", logEvent.Message);
+        Add(command, $"@exception{p}", logEvent.Exception);
+        Add(command, $"@properties_json{p}", logEvent.PropertiesJson);
+        Add(command, $"@event_id{p}", logEvent.EventId);
+        Add(command, $"@source_context{p}", logEvent.SourceContext);
+        Add(command, $"@request_id{p}", logEvent.RequestId);
+        Add(command, $"@correlation_id{p}", logEvent.CorrelationId);
+        Add(command, $"@trace_id{p}", logEvent.TraceId);
+        Add(command, $"@span_id{p}", logEvent.SpanId);
+        Add(command, $"@user_id{p}", logEvent.UserId);
+        Add(command, $"@user_name{p}", logEvent.UserName);
+        Add(command, $"@client_ip{p}", logEvent.ClientIp);
+        Add(command, $"@user_agent{p}", logEvent.UserAgent);
+        Add(command, $"@machine_name{p}", logEvent.MachineName);
+        Add(command, $"@application{p}", logEvent.Application);
+        Add(command, $"@version{p}", logEvent.Version);
+        Add(command, $"@request_path{p}", logEvent.RequestPath);
+        Add(command, $"@request_method{p}", logEvent.RequestMethod);
+        Add(command, $"@status_code{p}", logEvent.StatusCode);
+        Add(command, $"@duration_ms{p}", logEvent.DurationMs);
+        Add(command, $"@request_headers_json{p}", logEvent.RequestHeadersJson);
+        Add(command, $"@response_headers_json{p}", logEvent.ResponseHeadersJson);
+        Add(command, $"@request_body{p}", logEvent.RequestBody);
+        Add(command, $"@response_body{p}", logEvent.ResponseBody);
+    }
+
+    private static string BuildBatchInsertSql(int count)
+    {
+        List<string> rows = new(count);
+        for (int i = 0; i < count; i++)
+        {
+            string p = $"_{i}";
+            rows.Add(
+                $"(@timestamp_utc{p}, @level{p}, @service_name{p}, @environment{p}, @message{p}, @exception{p}, @properties_json{p}, " +
+                $"@event_id{p}, @source_context{p}, @request_id{p}, @correlation_id{p}, @trace_id{p}, @span_id{p}, @user_id{p}, @user_name{p}, " +
+                $"@client_ip{p}, @user_agent{p}, @machine_name{p}, @application{p}, @version{p}, @request_path{p}, @request_method{p}, " +
+                $"@status_code{p}, @duration_ms{p}, @request_headers_json{p}, @response_headers_json{p}, @request_body{p}, @response_body{p})");
+        }
+
+        return $"""
+            INSERT INTO logs (
+                timestamp_utc, level, service_name, environment, message, exception, properties_json,
+                event_id, source_context, request_id, correlation_id, trace_id, span_id, user_id, user_name,
+                client_ip, user_agent, machine_name, application, version, request_path, request_method,
+                status_code, duration_ms, request_headers_json, response_headers_json, request_body, response_body
+            ) VALUES
+            {string.Join(",\n", rows)};
+            """;
     }
 
     private static void AddEqualsFilter(string? value, string column, string name, List<string> where, List<NpgsqlParameter> parameters)

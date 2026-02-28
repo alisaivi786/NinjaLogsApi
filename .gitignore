@@ -259,6 +259,14 @@ UpgradeLog*.htm
 ServiceFabricBackup/
 *.rptproj.bak
 
+# NinjaLogs runtime/generated artifacts
+src/NinjaLogs.Api/logs/
+src/NinjaLogs.Api/data/
+src/NinjaLogs.Api/**/*.ndjson
+src/NinjaLogs.Api/**/*.db
+tests/perf/reports/*.json
+!tests/perf/reports/.gitkeep
+
 # SQL Server files
 *.mdf
 *.ldf

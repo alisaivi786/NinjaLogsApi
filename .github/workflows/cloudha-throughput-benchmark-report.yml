@@ -24,6 +24,18 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=20
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Your_password123"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Your_password123 -Q 'SELECT 1' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=40
 
     steps:
       - name: Checkout
@@ -67,10 +79,11 @@ jobs:
           exit 1
 
       - name: Run Combined Phase 4 Benchmarks
-        run: tests/perf/run-phase4-benchmarks.sh
+        run: tests/perf/run-cloudha-throughput-benchmarks.sh
         env:
           PERF_REPORT_DIR: tests/perf/reports
           NINJALOGS_POSTGRES_CS: Host=localhost;Port=5432;Database=ninjalogs;Username=postgres;Password=postgres
+          NINJALOGS_SQLSERVER_CS: Server=localhost,1433;User ID=sa;Password=Your_password123;Initial Catalog=NinjaLogs;TrustServerCertificate=True;Encrypt=False;
           PERF_BASE_URL: http://localhost:8085
           PERF_API_KEY: dev-ingestion-key
           PERF_EVENTS: "50000"
@@ -92,7 +105,7 @@ jobs:
       - name: Job Summary
         if: always()
         run: |
-          COMBINED="$(ls -1t tests/perf/reports/phase4-combined-*.json 2>/dev/null | head -n1 || true)"
+          COMBINED="$(ls -1t tests/perf/reports/cloudha-throughput-combined-*.json 2>/dev/null | head -n1 || true)"
           PROVIDER="$(ls -1t tests/perf/reports/provider-performance-*.json 2>/dev/null | head -n1 || true)"
           E2E="$(ls -1t tests/perf/reports/e2e-performance-*.json 2>/dev/null | head -n1 || true)"
 

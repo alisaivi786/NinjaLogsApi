@@ -1,0 +1,31 @@
+{
+  "RunId": "197feb148a2b",
+  "StartedUtc": "2026-02-28T12:01:19.988227Z",
+  "FinishedUtc": "2026-02-28T12:01:25.000001Z",
+  "BaseUrl": "http://localhost:8085",
+  "Concurrency": 1,
+  "DurationSeconds": 5,
+  "PayloadPaddingBytes": 300,
+  "Requests": {
+    "TotalRequests": 991,
+    "Accepted202": 0,
+    "Throttled429": 0,
+    "PayloadTooLarge413": 0,
+    "Unauthorized401": 0,
+    "OtherErrors": 0,
+    "RequestExceptions": 991,
+    "AcceptedLogsPerSec": 0,
+    "TotalRequestsPerSec": 197.73437509352976,
+    "P50LatencyMs": 4.6396,
+    "P95LatencyMs": 7.40635,
+    "P99LatencyMs": 9.626860000000002
+  },
+  "QueueDepth": {
+    "Min": 0,
+    "Max": 0,
+    "Average": 0,
+    "Last": 0,
+    "Samples": []
+  },
+  "EndRuntime": null
+}

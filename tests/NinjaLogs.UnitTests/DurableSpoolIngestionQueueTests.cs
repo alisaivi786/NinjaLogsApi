@@ -26,7 +26,7 @@ public sealed class DurableSpoolIngestionQueueTests
             await firstQueue.EnqueueAsync(new LogEvent(DateTime.UtcNow, LogLevel.Error, "persist-me", null, null, null, null));
 
             DurableSpoolIngestionQueue secondQueue = new(options);
-            LogEvent replayed = await secondQueue.DequeueAsync();
+            LogEvent replayed = (await secondQueue.DequeueAsync()).Event;
 
             Assert.Equal("persist-me", replayed.Message);
         }

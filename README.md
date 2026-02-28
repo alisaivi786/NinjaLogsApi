@@ -98,6 +98,7 @@ In `src/NinjaLogs.Api/`:
 - Phase 1: `PHASE-1.md`
 - Phase 2 (Docker): `PHASE-2-DOCKER.md`
 - Phase 3 (Hardening): `PHASE-3-PLAN.md`
+- Phase 4 (Throughput Focus): `PHASE-4.md`
 
 ## Current Open Items
 - Exactly-once queue semantics (currently at-least-once)

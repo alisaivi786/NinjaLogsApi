@@ -60,6 +60,7 @@ public sealed class IngestionPipelineOptions
 {
     public int QueueCapacity { get; set; } = 20_000;
     public int BatchSize { get; set; } = 200;
+    public int WriterWorkers { get; set; } = 1;
     public int MaxWriteRetries { get; set; } = 3;
     public int RetryDelayMs { get; set; } = 200;
     public string DeadLetterDirectory { get; set; } = "deadletter";

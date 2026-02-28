@@ -31,8 +31,8 @@ public sealed class DurableSpoolIngestionQueueCheckpointTests
 
             for (int i = 0; i < total; i++)
             {
-                _ = await queue.DequeueAsync();
-                await queue.AcknowledgeAsync();
+                var item = await queue.DequeueAsync();
+                await queue.AcknowledgeAsync(item.Sequence);
             }
 
             string checkpoint = Path.Combine(logsDir, "queue", "checkpoint.txt");

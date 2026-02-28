@@ -16,8 +16,8 @@ public sealed class BoundedLogIngestionQueueTests
         await queue.EnqueueAsync(first);
         await queue.EnqueueAsync(second);
 
-        LogEvent actualFirst = await queue.DequeueAsync();
-        LogEvent actualSecond = await queue.DequeueAsync();
+        LogEvent actualFirst = (await queue.DequeueAsync()).Event;
+        LogEvent actualSecond = (await queue.DequeueAsync()).Event;
 
         Assert.Equal("first", actualFirst.Message);
         Assert.Equal("second", actualSecond.Message);

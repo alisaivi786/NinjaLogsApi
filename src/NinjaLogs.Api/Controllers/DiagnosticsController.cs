@@ -63,10 +63,13 @@ public sealed class DiagnosticsController(
             {
                 queued = metrics.QueuedCount,
                 written = metrics.WrittenCount,
+                writtenPerSecond = metrics.WrittenPerSecond,
                 writeFailures = metrics.FailedWriteCount,
                 queries = metrics.QueryCount,
                 avgWriteLatencyMs = metrics.AvgWriteLatencyMs,
-                avgQueryLatencyMs = metrics.AvgQueryLatencyMs
+                avgQueryLatencyMs = metrics.AvgQueryLatencyMs,
+                p95IngestionLatencyMs = metrics.P95IngestionLatencyMs,
+                p95DbInsertDurationMs = metrics.P95DbInsertDurationMs
             },
             indexStrategy = activeIndex is null
                 ? null
@@ -133,10 +136,13 @@ public sealed class DiagnosticsController(
             runtime = new
             {
                 metrics.WrittenCount,
+                metrics.WrittenPerSecond,
                 metrics.FailedWriteCount,
                 metrics.QueryCount,
                 metrics.AvgWriteLatencyMs,
-                metrics.AvgQueryLatencyMs
+                metrics.AvgQueryLatencyMs,
+                metrics.P95IngestionLatencyMs,
+                metrics.P95DbInsertDurationMs
             },
             details
         });

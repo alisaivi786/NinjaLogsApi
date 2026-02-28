@@ -1,0 +1,158 @@
+{
+  "Summary": {
+    "GeneratedUtc": "2026-02-28T12:01:25.769332Z",
+    "Phase4Target": {
+      "LogsPerSecondPerNode": 2000,
+      "P95IngestionLatencyMsUpperBound": 150
+    },
+    "QuickView": {
+      "AcceptedLogsPerSec": 0,
+      "RequestP95LatencyMs": 7.40635,
+      "QueueDepthAverage": 0,
+      "QueueDepthMax": 0,
+      "RuntimeWrittenPerSecond": 0,
+      "RuntimeP95IngestionLatencyMs": 0,
+      "RuntimeP95DbInsertDurationMs": 0
+    },
+    "Checks": [
+      {
+        "Name": "accepted_logs_per_sec\u003E=2000",
+        "Pass": false,
+        "Detail": "actual=0.00"
+      },
+      {
+        "Name": "request_p95_latency_ms\u003C150",
+        "Pass": true,
+        "Detail": "actual=7.41"
+      },
+      {
+        "Name": "runtime_written_per_sec\u003E=2000",
+        "Pass": false,
+        "Detail": "actual=0.00"
+      },
+      {
+        "Name": "runtime_p95_ingestion_latency_ms\u003C150",
+        "Pass": false,
+        "Detail": "actual=0.00"
+      },
+      {
+        "Name": "queue_depth_not_exploding",
+        "Pass": true,
+        "Detail": "avg=0.00,max=0.00"
+      }
+    ]
+  },
+  "ProviderReport": {
+    "RunId": "45eda2c50535",
+    "StartedUtc": "2026-02-28T12:01:18.260277Z",
+    "FinishedUtc": "2026-02-28T12:01:18.580834Z",
+    "TotalEvents": 100,
+    "BatchSize": 200,
+    "Results": [
+      {
+        "Provider": "File",
+        "Status": "ok",
+        "Note": "path=/var/folders/38/jpwfj5qx7jjdly58f8pj8vj80000gn/T/ninjalogs-perf-file-37ec936fdd6d45b5a4188b07665ac4ba",
+        "SingleInsert": {
+          "Mode": "single_insert",
+          "Operations": 100,
+          "ElapsedMs": 6.5957,
+          "ThroughputLogsPerSec": 15161.393028791486,
+          "P50LatencyMs": 0.045399999999999996,
+          "P95LatencyMs": 0.15993499999999994
+        },
+        "BulkInsert": null,
+        "Query": {
+          "ElapsedMs": 13.1894,
+          "ReturnedCount": 200,
+          "TotalCount": 200
+        }
+      },
+      {
+        "Provider": "SegmentedFile",
+        "Status": "ok",
+        "Note": "path=/var/folders/38/jpwfj5qx7jjdly58f8pj8vj80000gn/T/ninjalogs-perf-segmented-28d5bd4f4cad4862b2ef665ac3d0b53a",
+        "SingleInsert": {
+          "Mode": "single_insert",
+          "Operations": 100,
+          "ElapsedMs": 23.7263,
+          "ThroughputLogsPerSec": 4214.73217484395,
+          "P50LatencyMs": 0.17765,
+          "P95LatencyMs": 0.5792099999999997
+        },
+        "BulkInsert": null,
+        "Query": {
+          "ElapsedMs": 3.8524,
+          "ReturnedCount": 200,
+          "TotalCount": 200
+        }
+      },
+      {
+        "Provider": "SQLite",
+        "Status": "ok",
+        "Note": "path=/var/folders/38/jpwfj5qx7jjdly58f8pj8vj80000gn/T/ninjalogs-perf-sqlite-79595bd995a14b9bb361e1f58b14042a",
+        "SingleInsert": {
+          "Mode": "single_insert",
+          "Operations": 100,
+          "ElapsedMs": 68.558,
+          "ThroughputLogsPerSec": 1458.6189795501618,
+          "P50LatencyMs": 0.5280499999999999,
+          "P95LatencyMs": 1.3515999999999984
+        },
+        "BulkInsert": null,
+        "Query": {
+          "ElapsedMs": 19.3412,
+          "ReturnedCount": 200,
+          "TotalCount": 200
+        }
+      },
+      {
+        "Provider": "PostgreSQL",
+        "Status": "skipped",
+        "Note": "Set NINJALOGS_POSTGRES_CS to include PostgreSQL benchmark.",
+        "SingleInsert": null,
+        "BulkInsert": null,
+        "Query": null
+      },
+      {
+        "Provider": "SqlServer",
+        "Status": "skipped",
+        "Note": "Set NINJALOGS_SQLSERVER_CS to include SqlServer benchmark.",
+        "SingleInsert": null,
+        "BulkInsert": null,
+        "Query": null
+      }
+    ]
+  },
+  "E2EReport": {
+    "RunId": "197feb148a2b",
+    "StartedUtc": "2026-02-28T12:01:19.988227Z",
+    "FinishedUtc": "2026-02-28T12:01:25.000001Z",
+    "BaseUrl": "http://localhost:8085",
+    "Concurrency": 1,
+    "DurationSeconds": 5,
+    "PayloadPaddingBytes": 300,
+    "Requests": {
+      "TotalRequests": 991,
+      "Accepted202": 0,
+      "Throttled429": 0,
+      "PayloadTooLarge413": 0,
+      "Unauthorized401": 0,
+      "OtherErrors": 0,
+      "RequestExceptions": 991,
+      "AcceptedLogsPerSec": 0,
+      "TotalRequestsPerSec": 197.73437509352976,
+      "P50LatencyMs": 4.6396,
+      "P95LatencyMs": 7.40635,
+      "P99LatencyMs": 9.626860000000002
+    },
+    "QueueDepth": {
+      "Min": 0,
+      "Max": 0,
+      "Average": 0,
+      "Last": 0,
+      "Samples": []
+    },
+    "EndRuntime": null
+  }
+}

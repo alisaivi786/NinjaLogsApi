@@ -14,7 +14,8 @@ public sealed class DurableSpoolIngestionQueue : ILogIngestionQueue
     private readonly string _checkpointFilePath;
     private long _nextSequence;
     private long _ackedSequence;
-    private readonly Queue<long> _inflight = new();
+    private readonly SortedSet<long> _acknowledged = [];
+    private readonly object _ackLock = new();
     private int _ackSinceLastCompaction;
 
     public DurableSpoolIngestionQueue(StorageOptions storageOptions)
@@ -25,7 +26,7 @@ public sealed class DurableSpoolIngestionQueue : ILogIngestionQueue
         _channel = Channel.CreateBounded<QueueEnvelope>(new BoundedChannelOptions(capacity)
         {
             FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = true,
+            SingleReader = false,
             SingleWriter = false
         });
 
@@ -44,7 +45,7 @@ public sealed class DurableSpoolIngestionQueue : ILogIngestionQueue
     public async ValueTask EnqueueAsync(LogEvent logEvent, CancellationToken cancellationToken = default)
     {
         long seq = Interlocked.Increment(ref _nextSequence);
-        QueueEnvelope envelope = new(seq, logEvent);
+        QueueEnvelope envelope = new(seq, DateTime.UtcNow, logEvent);
         string line = JsonSerializer.Serialize(envelope) + Environment.NewLine;
 
         await _appendLock.WaitAsync(cancellationToken);
@@ -60,57 +61,60 @@ public sealed class DurableSpoolIngestionQueue : ILogIngestionQueue
         await _channel.Writer.WriteAsync(envelope, cancellationToken);
     }
 
-    public async ValueTask<LogEvent> DequeueAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<IngestionQueueItem> DequeueAsync(CancellationToken cancellationToken = default)
     {
         QueueEnvelope envelope = await _channel.Reader.ReadAsync(cancellationToken);
-        lock (_inflight)
-        {
-            _inflight.Enqueue(envelope.Seq);
-        }
-
-        return envelope.Event;
+        DateTime enqueuedUtc = envelope.EnqueuedUtc == default ? DateTime.UtcNow : envelope.EnqueuedUtc;
+        return new IngestionQueueItem(envelope.Seq, enqueuedUtc, envelope.Event);
     }
 
-    public bool TryDequeue(out LogEvent? logEvent)
+    public bool TryDequeue(out IngestionQueueItem? item)
     {
         if (!_channel.Reader.TryRead(out QueueEnvelope? envelope) || envelope is null)
         {
-            logEvent = null;
+            item = null;
             return false;
         }
 
-        lock (_inflight)
-        {
-            _inflight.Enqueue(envelope.Seq);
-        }
-
-        logEvent = envelope.Event;
+        DateTime enqueuedUtc = envelope.EnqueuedUtc == default ? DateTime.UtcNow : envelope.EnqueuedUtc;
+        item = new IngestionQueueItem(envelope.Seq, enqueuedUtc, envelope.Event);
         return true;
     }
 
-    public async ValueTask AcknowledgeAsync(CancellationToken cancellationToken = default)
+    public async ValueTask AcknowledgeAsync(long sequence, CancellationToken cancellationToken = default)
     {
-        long seq;
-        lock (_inflight)
-        {
-            if (_inflight.Count == 0)
-            {
-                return;
-            }
-            seq = _inflight.Dequeue();
-        }
-
-        if (seq <= _ackedSequence)
+        if (sequence <= 0)
         {
             return;
         }
 
-        _ackedSequence = seq;
-        await File.WriteAllTextAsync(_checkpointFilePath, _ackedSequence.ToString(), cancellationToken);
-        _ackSinceLastCompaction++;
-        if (_ackSinceLastCompaction >= 500)
+        bool shouldCompact = false;
+        long highestContiguousAck;
+        lock (_ackLock)
         {
-            _ackSinceLastCompaction = 0;
+            if (sequence <= _ackedSequence)
+            {
+                return;
+            }
+
+            _acknowledged.Add(sequence);
+            while (_acknowledged.Remove(_ackedSequence + 1))
+            {
+                _ackedSequence++;
+                _ackSinceLastCompaction++;
+            }
+
+            highestContiguousAck = _ackedSequence;
+            if (_ackSinceLastCompaction >= 500)
+            {
+                _ackSinceLastCompaction = 0;
+                shouldCompact = true;
+            }
+        }
+
+        await File.WriteAllTextAsync(_checkpointFilePath, highestContiguousAck.ToString(), cancellationToken);
+        if (shouldCompact)
+        {
             await CompactAsync(cancellationToken);
         }
     }
@@ -203,5 +207,5 @@ public sealed class DurableSpoolIngestionQueue : ILogIngestionQueue
         File.Delete(tempFile);
     }
 
-    private sealed record QueueEnvelope(long Seq, LogEvent Event);
+    private sealed record QueueEnvelope(long Seq, DateTime EnqueuedUtc, LogEvent Event);
 }
