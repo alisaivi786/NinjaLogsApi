@@ -1,0 +1,193 @@
+name: CloudHA Throughput Benchmark Report
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  cloudha-throughput-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: "ninjalogs"
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "postgres"
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d ninjalogs"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore NinjaLogs.sln --configfile NuGet.Config
+
+      - name: Start API (CloudHa + PostgreSQL)
+        run: |
+          dotnet run --project src/NinjaLogs.Api/NinjaLogs.Api.csproj --urls "http://0.0.0.0:8085" &
+          echo $! > api.pid
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          Storage__Provider: PostgreSQL
+          Storage__Deployment__Profile: CloudHa
+          Storage__Deployment__NodeMode: MultiWriter
+          Storage__Connections__PostgreSQL: Host=localhost;Port=5432;Database=ninjalogs;Username=postgres;Password=postgres
+          Storage__Retention__Enabled: "true"
+          Storage__IngestionPipeline__BatchSize: "200"
+          Storage__IngestionPipeline__WriterWorkers: "2"
+          Storage__IngestionPipeline__QueueCapacity: "50000"
+          Storage__IngestionPipeline__MaxRequestsPerMinutePerApiKey: "120000"
+          ApiKeys__IngestionKeys__0: dev-ingestion-key
+
+      - name: Wait for API health
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:8085/health > /dev/null; then
+              echo "API is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not become healthy in time"
+          exit 1
+
+      - name: Run Combined Phase 4 Benchmarks
+        run: tests/perf/run-phase4-benchmarks.sh
+        env:
+          PERF_REPORT_DIR: tests/perf/reports
+          NINJALOGS_POSTGRES_CS: Host=localhost;Port=5432;Database=ninjalogs;Username=postgres;Password=postgres
+          PERF_BASE_URL: http://localhost:8085
+          PERF_API_KEY: dev-ingestion-key
+          PERF_EVENTS: "50000"
+          PERF_BATCH_SIZE: "200"
+          PERF_CONCURRENCY: "80"
+          PERF_DURATION_SECONDS: "120"
+          PERF_PAYLOAD_PADDING_BYTES: "300"
+          PERF_DIAGNOSTICS_INTERVAL_MS: "1000"
+
+      - name: Upload Benchmark Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudha-throughput-benchmark-reports
+          path: tests/perf/reports/*.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Job Summary
+        if: always()
+        run: |
+          COMBINED="$(ls -1t tests/perf/reports/phase4-combined-*.json 2>/dev/null | head -n1 || true)"
+          PROVIDER="$(ls -1t tests/perf/reports/provider-performance-*.json 2>/dev/null | head -n1 || true)"
+          E2E="$(ls -1t tests/perf/reports/e2e-performance-*.json 2>/dev/null | head -n1 || true)"
+
+          if [ -z "$COMBINED" ] || [ -z "$PROVIDER" ] || [ -z "$E2E" ]; then
+            {
+              echo "## CloudHA Throughput Benchmark Report"
+              echo ""
+              echo "### ⚠️ Benchmark reports were not generated"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          python3 - "$COMBINED" "$PROVIDER" "$E2E" >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json, sys
+          combined_path, provider_path, e2e_path = sys.argv[1], sys.argv[2], sys.argv[3]
+
+          with open(combined_path, "r", encoding="utf-8") as f:
+              combined = json.load(f)
+          with open(provider_path, "r", encoding="utf-8") as f:
+              provider = json.load(f)
+          with open(e2e_path, "r", encoding="utf-8") as f:
+              e2e = json.load(f)
+
+          summary = combined.get("Summary", {})
+          quick = summary.get("QuickView", {})
+          checks = summary.get("Checks", [])
+
+          def f2(v):
+              try:
+                  return f"{float(v):.2f}"
+              except Exception:
+                  return "0.00"
+
+          passed = sum(1 for c in checks if c.get("Pass"))
+          total = len(checks)
+
+          print("## CloudHA Throughput Benchmark Report")
+          print("")
+          print("### ✅ What We Achieved In This Run")
+          print(f"- End-to-end accepted throughput: **{f2(quick.get('AcceptedLogsPerSec'))} logs/sec**")
+          print(f"- Request p95 latency: **{f2(quick.get('RequestP95LatencyMs'))} ms**")
+          print(f"- Runtime written/sec: **{f2(quick.get('RuntimeWrittenPerSecond'))}**")
+          print(f"- Runtime ingestion p95: **{f2(quick.get('RuntimeP95IngestionLatencyMs'))} ms**")
+          print(f"- Queue depth avg/max: **{f2(quick.get('QueueDepthAverage'))} / {f2(quick.get('QueueDepthMax'))}**")
+          print(f"- Target checks passed: **{passed}/{total}**")
+          print("")
+
+          print("### 🟢 SQL Performance: details")
+          print("")
+          print("| Provider | Status | Single Insert (logs/sec) | Single Insert p95 (ms) | Bulk Insert (logs/sec) | Bulk Insert p95 (ms) | Query (ms) |")
+          print("|---|---|---:|---:|---:|---:|---:|")
+          for r in provider.get("Results", []):
+              single = r.get("SingleInsert") or {}
+              bulk = r.get("BulkInsert") or {}
+              query = r.get("Query") or {}
+              print(
+                  f"| {r.get('Provider','-')} | {r.get('Status','-')} | "
+                  f"{f2(single.get('ThroughputLogsPerSec'))} | {f2(single.get('P95LatencyMs'))} | "
+                  f"{f2(bulk.get('ThroughputLogsPerSec'))} | {f2(bulk.get('P95LatencyMs'))} | "
+                  f"{f2(query.get('ElapsedMs'))} |"
+              )
+          print("")
+
+          print("### 🟢 SQLite Performance")
+          sqlite = next((x for x in provider.get("Results", []) if str(x.get("Provider","")).lower() == "sqlite"), None)
+          if sqlite:
+              s = sqlite.get("SingleInsert") or {}
+              q = sqlite.get("Query") or {}
+              print(f"- Status: **{sqlite.get('Status','-')}**")
+              print(f"- Throughput: **{f2(s.get('ThroughputLogsPerSec'))} logs/sec**")
+              print(f"- p95 insert latency: **{f2(s.get('P95LatencyMs'))} ms**")
+              print(f"- Query latency: **{f2(q.get('ElapsedMs'))} ms**")
+          else:
+              print("- SQLite result not found in provider report.")
+          print("")
+
+          print("### End-to-End API Snapshot")
+          req = e2e.get("Requests", {})
+          print(f"- Accepted 202: **{req.get('Accepted202',0)}**")
+          print(f"- Throttled 429: **{req.get('Throttled429',0)}**")
+          print(f"- Total requests: **{req.get('TotalRequests',0)}**")
+          print(f"- p50/p95/p99 latency: **{f2(req.get('P50LatencyMs'))} / {f2(req.get('P95LatencyMs'))} / {f2(req.get('P99LatencyMs'))} ms**")
+          print("")
+
+          print("### Generated JSON Reports")
+          print(f"- `{provider_path}`")
+          print(f"- `{e2e_path}`")
+          print(f"- `{combined_path}`")
+          print("")
+          print("Artifact: `cloudha-throughput-benchmark-reports`")
+          PY
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f api.pid ]; then
+            kill "$(cat api.pid)" || true
+          fi
