@@ -12,60 +12,7 @@
       "name": "SQL-Server",
       "item": [
         {
-          "name": "Health Check (works now)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{SQLServerBaseUrl}}/health",
-              "host": [
-                "{{SQLServerBaseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Log (works now)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Api-Key",
-                "value": "{{apiKey}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{SQLServerBaseUrl}}/api/logs",
-              "host": [
-                "{{SQLServerBaseUrl}}"
-              ],
-              "path": [
-                "api",
-                "logs"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Extended Log (works now)",
+          "name": "Ingest Extended Log - 01",
           "request": {
             "method": "POST",
             "header": [
@@ -102,7 +49,7 @@
           "response": []
         },
         {
-          "name": "Ingest Seq Raw CLEF (works now)",
+          "name": "Ingest Seq Raw CLEF - 02",
           "request": {
             "method": "POST",
             "header": [
@@ -139,7 +86,7 @@
           "response": []
         },
         {
-          "name": "Query Logs (planned)",
+          "name": "Query Logs - 03",
           "request": {
             "method": "GET",
             "header": [],
@@ -196,60 +143,7 @@
       "name": "SqlLite",
       "item": [
         {
-          "name": "Health Check (works now)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{SqlLiteBaseUrl}}/health",
-              "host": [
-                "{{SqlLiteBaseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Log (works now)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Api-Key",
-                "value": "{{apiKey}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{SqlLiteBaseUrl}}/api/logs",
-              "host": [
-                "{{SqlLiteBaseUrl}}"
-              ],
-              "path": [
-                "api",
-                "logs"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Extended Log (works now)",
+          "name": "Ingest Extended Log - 01",
           "request": {
             "method": "POST",
             "header": [
@@ -286,7 +180,7 @@
           "response": []
         },
         {
-          "name": "Ingest Seq Raw CLEF (works now)",
+          "name": "Ingest Seq Raw CLEF - 02",
           "request": {
             "method": "POST",
             "header": [
@@ -323,7 +217,7 @@
           "response": []
         },
         {
-          "name": "Query Logs (planned)",
+          "name": "Query Logs - 03",
           "request": {
             "method": "GET",
             "header": [],
@@ -380,60 +274,7 @@
       "name": "PostgreSQL",
       "item": [
         {
-          "name": "Health Check (works now)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{PostgreSqlBaseUrl}}/health",
-              "host": [
-                "{{PostgreSqlBaseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Log (works now)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Api-Key",
-                "value": "{{apiKey}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{PostgreSqlBaseUrl}}/api/logs",
-              "host": [
-                "{{PostgreSqlBaseUrl}}"
-              ],
-              "path": [
-                "api",
-                "logs"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Extended Log (works now)",
+          "name": "Ingest Extended Log - 01",
           "request": {
             "method": "POST",
             "header": [
@@ -470,7 +311,7 @@
           "response": []
         },
         {
-          "name": "Ingest Seq Raw CLEF (works now)",
+          "name": "Ingest Seq Raw CLEF - 02",
           "request": {
             "method": "POST",
             "header": [
@@ -507,7 +348,7 @@
           "response": []
         },
         {
-          "name": "Query Logs (planned)",
+          "name": "Query Logs - 03",
           "request": {
             "method": "GET",
             "header": [],
@@ -564,60 +405,7 @@
       "name": "FileStorage",
       "item": [
         {
-          "name": "Health Check (works now)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{FileBaseUrl}}/health",
-              "host": [
-                "{{FileBaseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Log (works now)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Api-Key",
-                "value": "{{apiKey}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{FileBaseUrl}}/api/logs",
-              "host": [
-                "{{FileBaseUrl}}"
-              ],
-              "path": [
-                "api",
-                "logs"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Extended Log (works now)",
+          "name": "Ingest Extended Log - 01",
           "request": {
             "method": "POST",
             "header": [
@@ -654,7 +442,7 @@
           "response": []
         },
         {
-          "name": "Ingest Seq Raw CLEF (works now)",
+          "name": "Ingest Seq Raw CLEF - 02",
           "request": {
             "method": "POST",
             "header": [
@@ -691,7 +479,7 @@
           "response": []
         },
         {
-          "name": "Query Logs (planned)",
+          "name": "Query Logs - 03",
           "request": {
             "method": "GET",
             "header": [],
@@ -748,60 +536,7 @@
       "name": "SegmentStorage",
       "item": [
         {
-          "name": "Health Check (works now)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{SegmentBaseUrl}}/health",
-              "host": [
-                "{{SegmentBaseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Log (works now)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Api-Key",
-                "value": "{{apiKey}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{SegmentBaseUrl}}/api/logs",
-              "host": [
-                "{{SegmentBaseUrl}}"
-              ],
-              "path": [
-                "api",
-                "logs"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ingest Extended Log (works now)",
+          "name": "Ingest Extended Log - 01",
           "request": {
             "method": "POST",
             "header": [
@@ -838,7 +573,7 @@
           "response": []
         },
         {
-          "name": "Ingest Seq Raw CLEF (works now)",
+          "name": "Ingest Seq Raw CLEF - 02",
           "request": {
             "method": "POST",
             "header": [
@@ -875,7 +610,7 @@
           "response": []
         },
         {
-          "name": "Query Logs (planned)",
+          "name": "Query Logs - 03",
           "request": {
             "method": "GET",
             "header": [],
