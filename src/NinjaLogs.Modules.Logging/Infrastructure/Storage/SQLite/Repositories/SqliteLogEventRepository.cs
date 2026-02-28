@@ -204,7 +204,7 @@ public sealed class SqliteLogEventRepository(StorageOptions options) : IRelation
                 StatusCode, DurationMs, RequestHeadersJson, ResponseHeadersJson, RequestBody, ResponseBody
             FROM Logs
             {whereClause}
-            ORDER BY TimestampUtc DESC
+            ORDER BY TimestampUtc DESC, Id DESC
             LIMIT $limit OFFSET $offset;
             """;
 

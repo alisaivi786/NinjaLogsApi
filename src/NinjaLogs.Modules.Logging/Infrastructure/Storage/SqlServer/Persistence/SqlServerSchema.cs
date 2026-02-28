@@ -40,8 +40,8 @@ public static class SqlServerSchema
         """;
 
     public const string CreateIndexesSql = """
-        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
-            CREATE INDEX IX_Logs_TimestampUtc ON dbo.Logs (TimestampUtc);
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_TimestampUtc_Id' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_TimestampUtc_Id ON dbo.Logs (TimestampUtc DESC, Id DESC);
 
         IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_Level' AND object_id = OBJECT_ID('dbo.Logs'))
             CREATE INDEX IX_Logs_Level ON dbo.Logs (Level);
@@ -60,5 +60,29 @@ public static class SqlServerSchema
 
         IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_StatusCode' AND object_id = OBJECT_ID('dbo.Logs'))
             CREATE INDEX IX_Logs_StatusCode ON dbo.Logs (StatusCode);
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_Level_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_Level_TimestampUtc ON dbo.Logs (Level, TimestampUtc DESC);
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_ServiceName_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_ServiceName_TimestampUtc ON dbo.Logs (ServiceName, TimestampUtc DESC);
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_Environment_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_Environment_TimestampUtc ON dbo.Logs (Environment, TimestampUtc DESC);
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_TraceId_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_TraceId_TimestampUtc ON dbo.Logs (TraceId, TimestampUtc DESC);
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_CorrelationId_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_CorrelationId_TimestampUtc ON dbo.Logs (CorrelationId, TimestampUtc DESC);
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_RequestId_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_RequestId_TimestampUtc ON dbo.Logs (RequestId, TimestampUtc DESC);
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_RequestMethod_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_RequestMethod_TimestampUtc ON dbo.Logs (RequestMethod, TimestampUtc DESC);
+
+        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Logs_StatusCode_TimestampUtc' AND object_id = OBJECT_ID('dbo.Logs'))
+            CREATE INDEX IX_Logs_StatusCode_TimestampUtc ON dbo.Logs (StatusCode, TimestampUtc DESC);
         """;
 }

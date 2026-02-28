@@ -188,7 +188,7 @@ public sealed class SqlServerLogEventRepository(StorageOptions options) : IRelat
                 StatusCode, DurationMs, RequestHeadersJson, ResponseHeadersJson, RequestBody, ResponseBody
             FROM dbo.Logs
             {whereClause}
-            ORDER BY TimestampUtc DESC
+            ORDER BY TimestampUtc DESC, Id DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;
             """;
 

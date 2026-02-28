@@ -37,12 +37,20 @@ public static class SqliteSchema
         """;
 
     public const string CreateIndexesSql = """
-        CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON Logs(TimestampUtc);
+        CREATE INDEX IF NOT EXISTS idx_logs_timestamp_id ON Logs(TimestampUtc DESC, Id DESC);
         CREATE INDEX IF NOT EXISTS idx_logs_level ON Logs(Level);
         CREATE INDEX IF NOT EXISTS idx_logs_service ON Logs(ServiceName);
         CREATE INDEX IF NOT EXISTS idx_logs_trace ON Logs(TraceId);
         CREATE INDEX IF NOT EXISTS idx_logs_correlation ON Logs(CorrelationId);
         CREATE INDEX IF NOT EXISTS idx_logs_request_id ON Logs(RequestId);
         CREATE INDEX IF NOT EXISTS idx_logs_status ON Logs(StatusCode);
+        CREATE INDEX IF NOT EXISTS idx_logs_level_timestamp ON Logs(Level, TimestampUtc DESC);
+        CREATE INDEX IF NOT EXISTS idx_logs_service_timestamp ON Logs(ServiceName, TimestampUtc DESC);
+        CREATE INDEX IF NOT EXISTS idx_logs_environment_timestamp ON Logs(Environment, TimestampUtc DESC);
+        CREATE INDEX IF NOT EXISTS idx_logs_trace_timestamp ON Logs(TraceId, TimestampUtc DESC);
+        CREATE INDEX IF NOT EXISTS idx_logs_correlation_timestamp ON Logs(CorrelationId, TimestampUtc DESC);
+        CREATE INDEX IF NOT EXISTS idx_logs_request_id_timestamp ON Logs(RequestId, TimestampUtc DESC);
+        CREATE INDEX IF NOT EXISTS idx_logs_request_method_timestamp ON Logs(RequestMethod, TimestampUtc DESC);
+        CREATE INDEX IF NOT EXISTS idx_logs_status_timestamp ON Logs(StatusCode, TimestampUtc DESC);
         """;
 }
