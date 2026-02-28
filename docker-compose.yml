@@ -7,8 +7,8 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "SDSHJ@AlwaysHandy"
-    ports:
-      - "1433:1433"
+    expose:
+      - "1433"
     volumes:
       - ninjalogs_sqlserver_data:/var/opt/mssql
     healthcheck:
@@ -50,7 +50,7 @@ services:
     ports:
       - "8081:8080"
     volumes:
-      - ninjalogs_file_logs:/var/ninjalogs/logs
+      - ./docker-data/file/logs:/var/ninjalogs/logs
 
   api-sqlite:
     build:
@@ -68,7 +68,7 @@ services:
     ports:
       - "8082:8080"
     volumes:
-      - ninjalogs_sqlite_data:/var/ninjalogs/sqlite
+      - ./docker-data/sqlite:/var/ninjalogs/sqlite
 
   api-segmented:
     build:
@@ -87,7 +87,7 @@ services:
     ports:
       - "8083:8080"
     volumes:
-      - ninjalogs_segmented_data:/var/ninjalogs/data
+      - ./docker-data/segmented:/var/ninjalogs/data
 
   api-sqlserver:
     build:
@@ -130,6 +130,3 @@ services:
 volumes:
   ninjalogs_sqlserver_data:
   ninjalogs_postgres_data:
-  ninjalogs_file_logs:
-  ninjalogs_sqlite_data:
-  ninjalogs_segmented_data:

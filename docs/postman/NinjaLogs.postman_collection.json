@@ -1,0 +1,942 @@
+{
+  "info": {
+    "_postman_id": "dc9c3717-cd82-491d-8039-2608904d021d",
+    "name": "NinjaLogs",
+    "description": "Current and planned API requests for NinjaLogs Phase 1.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "37324392",
+    "_collection_link": "https://go.postman.co/collection/37324392-dc9c3717-cd82-491d-8039-2608904d021d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "SQL-Server",
+      "item": [
+        {
+          "name": "Health Check (works now)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{SQLServerBaseUrl}}/health",
+              "host": [
+                "{{SQLServerBaseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SQLServerBaseUrl}}/api/logs",
+              "host": [
+                "{{SQLServerBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Extended Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": \"System.Exception: failed\",\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\",\\\"tenantId\\\":\\\"acme\\\"}\",\n  \"eventId\": \"PAYMENT_FAILED\",\n  \"sourceContext\": \"Billing.Payments\",\n  \"requestId\": \"REQ-123\",\n  \"correlationId\": \"CORR-789\",\n  \"traceId\": \"TRACE-456\",\n  \"spanId\": \"SPAN-001\",\n  \"userId\": \"user-42\",\n  \"userName\": \"ali@example.com\",\n  \"clientIp\": \"192.168.1.10\",\n  \"userAgent\": \"PostmanRuntime\",\n  \"machineName\": \"api-node-1\",\n  \"application\": \"NinjaLogs.Api\",\n  \"version\": \"1.0.0\",\n  \"requestPath\": \"/api/payments\",\n  \"requestMethod\": \"POST\",\n  \"statusCode\": 500,\n  \"durationMs\": 124.5,\n  \"requestHeadersJson\": \"{\\\"x-request-id\\\":\\\"REQ-123\\\"}\",\n  \"responseHeadersJson\": \"{\\\"content-type\\\":\\\"application/json\\\"}\",\n  \"requestBody\": \"{\\\"orderId\\\":\\\"123\\\"}\",\n  \"responseBody\": \"{\\\"error\\\":\\\"Payment failed\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SQLServerBaseUrl}}/api/v1.0/logs",
+              "host": [
+                "{{SQLServerBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Seq Raw CLEF (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.serilog.clef"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"@t\":\"2026-02-28T12:00:00.000Z\",\"@l\":\"Error\",\"@m\":\"Payment failed for {OrderId}\",\"@x\":\"System.Exception: failed\",\"OrderId\":\"123\",\"TraceId\":\"TRACE-456\",\"CorrelationId\":\"CORR-789\",\"RequestPath\":\"/api/payments\",\"RequestMethod\":\"POST\",\"StatusCode\":500}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SQLServerBaseUrl}}/api/events/raw",
+              "host": [
+                "{{SQLServerBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "raw"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Query Logs (planned)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{SQLServerBaseUrl}}/api/logs?fromUtc=2026-02-28T00:00:00Z&toUtc=2026-02-28T23:59:59Z&level=Error&page=1&pageSize=50&traceId=TRACE-456&correlationId=CORR-789&requestMethod=POST",
+              "host": [
+                "{{SQLServerBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "fromUtc",
+                  "value": "2026-02-28T00:00:00Z"
+                },
+                {
+                  "key": "toUtc",
+                  "value": "2026-02-28T23:59:59Z"
+                },
+                {
+                  "key": "level",
+                  "value": "Error"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                },
+                {
+                  "key": "traceId",
+                  "value": "TRACE-456"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "CORR-789"
+                },
+                {
+                  "key": "requestMethod",
+                  "value": "POST"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "SqlLite",
+      "item": [
+        {
+          "name": "Health Check (works now)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{SqlLiteBaseUrl}}/health",
+              "host": [
+                "{{SqlLiteBaseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SqlLiteBaseUrl}}/api/logs",
+              "host": [
+                "{{SqlLiteBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Extended Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": \"System.Exception: failed\",\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\",\\\"tenantId\\\":\\\"acme\\\"}\",\n  \"eventId\": \"PAYMENT_FAILED\",\n  \"sourceContext\": \"Billing.Payments\",\n  \"requestId\": \"REQ-123\",\n  \"correlationId\": \"CORR-789\",\n  \"traceId\": \"TRACE-456\",\n  \"spanId\": \"SPAN-001\",\n  \"userId\": \"user-42\",\n  \"userName\": \"ali@example.com\",\n  \"clientIp\": \"192.168.1.10\",\n  \"userAgent\": \"PostmanRuntime\",\n  \"machineName\": \"api-node-1\",\n  \"application\": \"NinjaLogs.Api\",\n  \"version\": \"1.0.0\",\n  \"requestPath\": \"/api/payments\",\n  \"requestMethod\": \"POST\",\n  \"statusCode\": 500,\n  \"durationMs\": 124.5,\n  \"requestHeadersJson\": \"{\\\"x-request-id\\\":\\\"REQ-123\\\"}\",\n  \"responseHeadersJson\": \"{\\\"content-type\\\":\\\"application/json\\\"}\",\n  \"requestBody\": \"{\\\"orderId\\\":\\\"123\\\"}\",\n  \"responseBody\": \"{\\\"error\\\":\\\"Payment failed\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SqlLiteBaseUrl}}/api/v1.0/logs",
+              "host": [
+                "{{SqlLiteBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Seq Raw CLEF (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.serilog.clef"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"@t\":\"2026-02-28T12:00:00.000Z\",\"@l\":\"Error\",\"@m\":\"Payment failed for {OrderId}\",\"@x\":\"System.Exception: failed\",\"OrderId\":\"123\",\"TraceId\":\"TRACE-456\",\"CorrelationId\":\"CORR-789\",\"RequestPath\":\"/api/payments\",\"RequestMethod\":\"POST\",\"StatusCode\":500}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SqlLiteBaseUrl}}/api/events/raw",
+              "host": [
+                "{{SqlLiteBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "raw"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Query Logs (planned)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{SqlLiteBaseUrl}}/api/logs?fromUtc=2026-02-28T00:00:00Z&toUtc=2026-02-28T23:59:59Z&level=Error&page=1&pageSize=50&traceId=TRACE-456&correlationId=CORR-789&requestMethod=POST",
+              "host": [
+                "{{SqlLiteBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "fromUtc",
+                  "value": "2026-02-28T00:00:00Z"
+                },
+                {
+                  "key": "toUtc",
+                  "value": "2026-02-28T23:59:59Z"
+                },
+                {
+                  "key": "level",
+                  "value": "Error"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                },
+                {
+                  "key": "traceId",
+                  "value": "TRACE-456"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "CORR-789"
+                },
+                {
+                  "key": "requestMethod",
+                  "value": "POST"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "PostgreSQL",
+      "item": [
+        {
+          "name": "Health Check (works now)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{PostgreSqlBaseUrl}}/health",
+              "host": [
+                "{{PostgreSqlBaseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{PostgreSqlBaseUrl}}/api/logs",
+              "host": [
+                "{{PostgreSqlBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Extended Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": \"System.Exception: failed\",\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\",\\\"tenantId\\\":\\\"acme\\\"}\",\n  \"eventId\": \"PAYMENT_FAILED\",\n  \"sourceContext\": \"Billing.Payments\",\n  \"requestId\": \"REQ-123\",\n  \"correlationId\": \"CORR-789\",\n  \"traceId\": \"TRACE-456\",\n  \"spanId\": \"SPAN-001\",\n  \"userId\": \"user-42\",\n  \"userName\": \"ali@example.com\",\n  \"clientIp\": \"192.168.1.10\",\n  \"userAgent\": \"PostmanRuntime\",\n  \"machineName\": \"api-node-1\",\n  \"application\": \"NinjaLogs.Api\",\n  \"version\": \"1.0.0\",\n  \"requestPath\": \"/api/payments\",\n  \"requestMethod\": \"POST\",\n  \"statusCode\": 500,\n  \"durationMs\": 124.5,\n  \"requestHeadersJson\": \"{\\\"x-request-id\\\":\\\"REQ-123\\\"}\",\n  \"responseHeadersJson\": \"{\\\"content-type\\\":\\\"application/json\\\"}\",\n  \"requestBody\": \"{\\\"orderId\\\":\\\"123\\\"}\",\n  \"responseBody\": \"{\\\"error\\\":\\\"Payment failed\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{PostgreSqlBaseUrl}}/api/v1.0/logs",
+              "host": [
+                "{{PostgreSqlBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Seq Raw CLEF (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.serilog.clef"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"@t\":\"2026-02-28T12:00:00.000Z\",\"@l\":\"Error\",\"@m\":\"Payment failed for {OrderId}\",\"@x\":\"System.Exception: failed\",\"OrderId\":\"123\",\"TraceId\":\"TRACE-456\",\"CorrelationId\":\"CORR-789\",\"RequestPath\":\"/api/payments\",\"RequestMethod\":\"POST\",\"StatusCode\":500}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{PostgreSqlBaseUrl}}/api/events/raw",
+              "host": [
+                "{{PostgreSqlBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "raw"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Query Logs (planned)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{PostgreSqlBaseUrl}}/api/logs?fromUtc=2026-02-28T00:00:00Z&toUtc=2026-02-28T23:59:59Z&level=Error&page=1&pageSize=50&traceId=TRACE-456&correlationId=CORR-789&requestMethod=POST",
+              "host": [
+                "{{PostgreSqlBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "fromUtc",
+                  "value": "2026-02-28T00:00:00Z"
+                },
+                {
+                  "key": "toUtc",
+                  "value": "2026-02-28T23:59:59Z"
+                },
+                {
+                  "key": "level",
+                  "value": "Error"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                },
+                {
+                  "key": "traceId",
+                  "value": "TRACE-456"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "CORR-789"
+                },
+                {
+                  "key": "requestMethod",
+                  "value": "POST"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "FileStorage",
+      "item": [
+        {
+          "name": "Health Check (works now)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{FileBaseUrl}}/health",
+              "host": [
+                "{{FileBaseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{FileBaseUrl}}/api/logs",
+              "host": [
+                "{{FileBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Extended Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": \"System.Exception: failed\",\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\",\\\"tenantId\\\":\\\"acme\\\"}\",\n  \"eventId\": \"PAYMENT_FAILED\",\n  \"sourceContext\": \"Billing.Payments\",\n  \"requestId\": \"REQ-123\",\n  \"correlationId\": \"CORR-789\",\n  \"traceId\": \"TRACE-456\",\n  \"spanId\": \"SPAN-001\",\n  \"userId\": \"user-42\",\n  \"userName\": \"ali@example.com\",\n  \"clientIp\": \"192.168.1.10\",\n  \"userAgent\": \"PostmanRuntime\",\n  \"machineName\": \"api-node-1\",\n  \"application\": \"NinjaLogs.Api\",\n  \"version\": \"1.0.0\",\n  \"requestPath\": \"/api/payments\",\n  \"requestMethod\": \"POST\",\n  \"statusCode\": 500,\n  \"durationMs\": 124.5,\n  \"requestHeadersJson\": \"{\\\"x-request-id\\\":\\\"REQ-123\\\"}\",\n  \"responseHeadersJson\": \"{\\\"content-type\\\":\\\"application/json\\\"}\",\n  \"requestBody\": \"{\\\"orderId\\\":\\\"123\\\"}\",\n  \"responseBody\": \"{\\\"error\\\":\\\"Payment failed\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{FileBaseUrl}}/api/v1.0/logs",
+              "host": [
+                "{{FileBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Seq Raw CLEF (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.serilog.clef"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"@t\":\"2026-02-28T12:00:00.000Z\",\"@l\":\"Error\",\"@m\":\"Payment failed for {OrderId}\",\"@x\":\"System.Exception: failed\",\"OrderId\":\"123\",\"TraceId\":\"TRACE-456\",\"CorrelationId\":\"CORR-789\",\"RequestPath\":\"/api/payments\",\"RequestMethod\":\"POST\",\"StatusCode\":500}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{FileBaseUrl}}/api/events/raw",
+              "host": [
+                "{{FileBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "raw"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Query Logs (planned)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{FileBaseUrl}}/api/logs?fromUtc=2026-02-28T00:00:00Z&toUtc=2026-02-28T23:59:59Z&level=Error&page=1&pageSize=50&traceId=TRACE-456&correlationId=CORR-789&requestMethod=POST",
+              "host": [
+                "{{FileBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "fromUtc",
+                  "value": "2026-02-28T00:00:00Z"
+                },
+                {
+                  "key": "toUtc",
+                  "value": "2026-02-28T23:59:59Z"
+                },
+                {
+                  "key": "level",
+                  "value": "Error"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                },
+                {
+                  "key": "traceId",
+                  "value": "TRACE-456"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "CORR-789"
+                },
+                {
+                  "key": "requestMethod",
+                  "value": "POST"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "SegmentStorage",
+      "item": [
+        {
+          "name": "Health Check (works now)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{SegmentBaseUrl}}/health",
+              "host": [
+                "{{SegmentBaseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": null,\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SegmentBaseUrl}}/api/logs",
+              "host": [
+                "{{SegmentBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Extended Log (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestampUtc\": \"2026-02-28T12:00:00Z\",\n  \"level\": \"Error\",\n  \"message\": \"Payment failed\",\n  \"serviceName\": \"BillingService\",\n  \"environment\": \"Production\",\n  \"exception\": \"System.Exception: failed\",\n  \"propertiesJson\": \"{\\\"orderId\\\":\\\"123\\\",\\\"tenantId\\\":\\\"acme\\\"}\",\n  \"eventId\": \"PAYMENT_FAILED\",\n  \"sourceContext\": \"Billing.Payments\",\n  \"requestId\": \"REQ-123\",\n  \"correlationId\": \"CORR-789\",\n  \"traceId\": \"TRACE-456\",\n  \"spanId\": \"SPAN-001\",\n  \"userId\": \"user-42\",\n  \"userName\": \"ali@example.com\",\n  \"clientIp\": \"192.168.1.10\",\n  \"userAgent\": \"PostmanRuntime\",\n  \"machineName\": \"api-node-1\",\n  \"application\": \"NinjaLogs.Api\",\n  \"version\": \"1.0.0\",\n  \"requestPath\": \"/api/payments\",\n  \"requestMethod\": \"POST\",\n  \"statusCode\": 500,\n  \"durationMs\": 124.5,\n  \"requestHeadersJson\": \"{\\\"x-request-id\\\":\\\"REQ-123\\\"}\",\n  \"responseHeadersJson\": \"{\\\"content-type\\\":\\\"application/json\\\"}\",\n  \"requestBody\": \"{\\\"orderId\\\":\\\"123\\\"}\",\n  \"responseBody\": \"{\\\"error\\\":\\\"Payment failed\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SegmentBaseUrl}}/api/v1.0/logs",
+              "host": [
+                "{{SegmentBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingest Seq Raw CLEF (works now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.serilog.clef"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"@t\":\"2026-02-28T12:00:00.000Z\",\"@l\":\"Error\",\"@m\":\"Payment failed for {OrderId}\",\"@x\":\"System.Exception: failed\",\"OrderId\":\"123\",\"TraceId\":\"TRACE-456\",\"CorrelationId\":\"CORR-789\",\"RequestPath\":\"/api/payments\",\"RequestMethod\":\"POST\",\"StatusCode\":500}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{SegmentBaseUrl}}/api/events/raw",
+              "host": [
+                "{{SegmentBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "raw"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Query Logs (planned)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{SegmentBaseUrl}}/api/logs?fromUtc=2026-02-28T00:00:00Z&toUtc=2026-02-28T23:59:59Z&level=Error&page=1&pageSize=50&traceId=TRACE-456&correlationId=CORR-789&requestMethod=POST",
+              "host": [
+                "{{SegmentBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "fromUtc",
+                  "value": "2026-02-28T00:00:00Z"
+                },
+                {
+                  "key": "toUtc",
+                  "value": "2026-02-28T23:59:59Z"
+                },
+                {
+                  "key": "level",
+                  "value": "Error"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                },
+                {
+                  "key": "traceId",
+                  "value": "TRACE-456"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "CORR-789"
+                },
+                {
+                  "key": "requestMethod",
+                  "value": "POST"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7080"
+    },
+    {
+      "key": "apiKey",
+      "value": "dev-ingestion-key"
+    }
+  ]
+}
